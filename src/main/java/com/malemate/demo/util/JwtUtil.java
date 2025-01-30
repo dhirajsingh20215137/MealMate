@@ -1,10 +1,10 @@
 package com.malemate.demo.util;
 
 import com.malemate.demo.entity.User;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
@@ -12,52 +12,62 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // Load the secret key from application.properties for better security
     @Value("${jwt.secret.key}")
     private String secretKey;
 
-    // Generate the signing key
     private Key getSigningKey() {
+        // Ensure secret key is at least 32 bytes long for HMAC-SHA256
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    // Generate a JWT token for the user
+    // Generate JWT token for the user
     public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail()) // Set the subject (email)
-                .setIssuedAt(new Date()) // Set the issued date
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Set expiration (10 hours)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Sign with the key
+                .setSubject(user.getEmail()) // Set user email as subject
+                .claim("roles", user.getUserType().name()) // Add roles claim
+                .setIssuedAt(new Date()) // Issue time
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Expiration (10 hours)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Sign with key
                 .compact();
     }
 
-    // Extract the email from the token
+    // Extract email from token
     public String extractEmail(String token) {
-        return Jwts.parser() // Using the new parserBuilder
-                .setSigningKey(getSigningKey()) // Set the signing key
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject(); // Extract the subject (email)
+        return extractClaim(token, Claims::getSubject);
     }
 
-    // Validate the token with email
+    // Validate token
     public boolean validateToken(String token, String email) {
         return email.equals(extractEmail(token)) && !isTokenExpired(token);
     }
 
     // Check if the token is expired
     private boolean isTokenExpired(String token) {
-        return extractExpirationDate(token).before(new Date());
+        return extractExpiration(token).before(new Date());
     }
 
-    // Extract the expiration date from the token
-    private Date extractExpirationDate(String token) {
-        return Jwts.parser() // Using the new parserBuilder
-                .setSigningKey(getSigningKey()) // Set the signing key
+    // Extract expiration date from token
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+    // In extractClaim method
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("roles", String.class)); // Extract roles from JWT
+    }
+
+    // Generic method to extract claims
+    private <T> T extractClaim(String token, ClaimsResolver<T> claimsResolver) {
+        Claims claims = Jwts.parser() // Use parserBuilder instead of deprecated parser()
+                .setSigningKey(getSigningKey()) // Set signing key
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration(); // Extract expiration
+                .parseClaimsJws(token) // Parse token
+                .getBody(); // Get claims
+        return claimsResolver.resolve(claims);
+    }
+
+    // Functional interface for extracting claims
+    @FunctionalInterface
+    public interface ClaimsResolver<T> {
+        T resolve(Claims claims);
     }
 }

@@ -1,15 +1,12 @@
 package com.malemate.demo.controller;
 
-
 import com.malemate.demo.dto.AuthResponseDTO;
+import com.malemate.demo.dto.LoginRequestDTO;
 import com.malemate.demo.dto.SignupRequestDTO;
 import com.malemate.demo.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -23,5 +20,13 @@ public class AuthController {
         return authService.signup(signupRequestDto);
     }
 
+    @PostMapping("/login")
+    public AuthResponseDTO login(@RequestBody LoginRequestDTO loginRequestDto) {
+        return authService.login(loginRequestDto);
+    }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        return ResponseEntity.ok("Logout successful. Invalidate JWT token on the client side.");
+    }
 }

@@ -1,51 +1,20 @@
-package com.malemate.demo.entity;
+package com.malemate.demo.dto;
 
-import jakarta.persistence.*;
-import org.hibernate.usertype.UserType;
+import com.malemate.demo.entity.User;
 
+public class UserProfileDTO {
 
-@Entity
-@Table(name = "user")
-public class User extends base {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
     private int userId;
-
-    @Column(name = "email", unique = true, nullable = false)
     private String email;
-
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "gender")
-    private Gender gender;
-
-    @Column(name = "weight")
+    private User.Gender gender;
     private float weight;
-
-    @Column(name = "height")
     private float height;
-
-    @Column(name = "targeted_carbs")
     private float targetedCarbs;
-
-    @Column(name = "targeted_protein")
     private float targetedProtein;
-
-    @Column(name = "targeted_calories")
     private float targetedCalories;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name="user_type")
-    private UserType userType;
-
-    @Column(name = "user_url")
-    private  String userUrl;
-
-
+    private String UserUrl;
+    private User.UserType userType;
+    // Getters and Setters
 
 
     public int getUserId() {
@@ -64,19 +33,11 @@ public class User extends base {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Gender getGender() {
+    public User.Gender getGender() {
         return gender;
     }
 
-    public void setGender(Gender gender) {
+    public void setGender(User.Gender gender) {
         this.gender = gender;
     }
 
@@ -120,26 +81,19 @@ public class User extends base {
         this.targetedCalories = targetedCalories;
     }
 
-    public UserType getUserType() {
-        return userType;
-    }
-
-    public void setUserType(UserType userType) {
-        this.userType = userType;
-    }
-
     public String getUserUrl() {
-        return userUrl;
+        return UserUrl;
     }
 
     public void setUserUrl(String userUrl) {
-        this.userUrl = userUrl;
+        UserUrl = userUrl;
     }
 
-    public enum Gender {
-        MALE, FEMALE, OTHER
+    public User.UserType getUserType() {
+        return userType;
     }
-    public enum UserType {
-        ADMIN, USER
+
+    public void setUserType(User.UserType userType) {
+        this.userType = userType;
     }
 }

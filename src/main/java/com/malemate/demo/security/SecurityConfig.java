@@ -1,69 +1,84 @@
 package com.malemate.demo.security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
 @Configuration
 public class SecurityConfig {
 
-    @Value("${jwt.secret.key}") // The secret key used for signing the JWT
+    @Value("${jwt.secret.key}") // Secret key for signing JWT
     private String secretKey;
 
     @Value("${jwt.expiration.time}") // JWT expiration time in milliseconds
     private long expirationTime;
 
-    // Generate a JWT token for a given username
-    public String generateToken(String username) {
+    // Store blacklisted tokens for logout
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
+
+    // Generate JWT token for a user
+    public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(new Date()) // Set the current date as the issue date
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // Set expiration time
-                .signWith(SignatureAlgorithm.HS512, secretKey) // Sign with the secret key
+                .claim("role", role) // Add role claim
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
     }
 
-    // Extract the username (subject) from the JWT token
+    // Extract role claim from token
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    // Extract username (subject) from JWT token
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject); // Extract subject (username) from the token
+        return extractClaim(token, Claims::getSubject);
     }
 
-    // Extract the expiration date from the JWT token
+    // Extract expiration date from JWT token
     public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration); // Extract expiration from the token
+        return extractClaim(token, Claims::getExpiration);
     }
 
-    // Extract a claim (like username or roles) from the JWT token
+    // Generic method to extract a claim
     private <T> T extractClaim(String token, ClaimsResolver<T> claimsResolver) {
-        Claims claims = extractAllClaims(token); // Get all claims from the token
-        return claimsResolver.resolve(claims); // Return the requested claim
+        Claims claims = extractAllClaims(token);
+        return claimsResolver.resolve(claims);
     }
 
-    // Extract all claims from the JWT token
+    // Extract all claims from JWT
     private Claims extractAllClaims(String token) {
-        return Jwts.parser() // Use parserBuilder instead of deprecated parser
-                .setSigningKey(secretKey) // Use the secret key to verify the token
+        return Jwts.parser() // Fix deprecated `parser()`
+                .setSigningKey(secretKey)
                 .build()
-                .parseClaimsJws(token) // Parse the token and get claims
+                .parseClaimsJws(token)
                 .getBody();
     }
 
-    // Validate if the JWT token has expired
+    // Check if JWT token is expired
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date()); // Compare expiration with the current date
+        return extractExpiration(token).before(new Date());
     }
 
-    // Validate the JWT token for a specific user
+    // Validate JWT token for a user
     public boolean validateToken(String token, String username) {
-        return (username.equals(extractUsername(token)) && !isTokenExpired(token)); // Check if username matches and token is not expired
+        return (!blacklistedTokens.contains(token)) // Check if token is blacklisted
+                && username.equals(extractUsername(token)) // Check if username matches
+                && !isTokenExpired(token); // Check expiration
     }
 
-    // Custom functional interface to resolve claims from the token
+    // Logout by blacklisting the token
+    public void logout(String token) {
+        blacklistedTokens.add(token); // Add token to blacklist
+    }
+
+    // Custom functional interface for claim resolution
     @FunctionalInterface
     public interface ClaimsResolver<T> {
         T resolve(Claims claims);
