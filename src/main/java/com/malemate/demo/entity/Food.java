@@ -36,6 +36,78 @@ public class Food extends base {
     @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
+    public int getFoodId() {
+        return foodId;
+    }
+
+    public void setFoodId(int foodId) {
+        this.foodId = foodId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getFoodName() {
+        return foodName;
+    }
+
+    public void setFoodName(String foodName) {
+        this.foodName = foodName;
+    }
+
+    public float getCalories() {
+        return calories;
+    }
+
+    public void setCalories(float calories) {
+        this.calories = calories;
+    }
+
+    public float getProteins() {
+        return proteins;
+    }
+
+    public void setProteins(float proteins) {
+        this.proteins = proteins;
+    }
+
+    public float getCarbs() {
+        return carbs;
+    }
+
+    public void setCarbs(float carbs) {
+        this.carbs = carbs;
+    }
+
+    public FoodType getFoodType() {
+        return foodType;
+    }
+
+    public void setFoodType(FoodType foodType) {
+        this.foodType = foodType;
+    }
+
+    public QuantityUnit getQuantityUnit() {
+        return quantityUnit;
+    }
+
+    public void setQuantityUnit(QuantityUnit quantityUnit) {
+        this.quantityUnit = quantityUnit;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public enum FoodType {
         UNIVERSAL_FOOD, CUSTOM_FOOD
     }
