@@ -18,7 +18,7 @@ public class UserService {
     public UserService(UserDao userDao) {
         this.userDao = userDao;
     }
-    // Get user profile by userId
+
     public UserProfileDTO getUserProfile(int userId) {
         Optional<User> userOptional = userDao.getUserById(userId);
         if (userOptional.isEmpty()) {
@@ -28,79 +28,79 @@ public class UserService {
         return mapToUserProfileDTO(user);  // Map User entity to UserProfileDTO
     }
 
-    //  Update user profile
+
     public User updateUserProfile(int userId, UserProfileDTO userProfileDTO) {
         User user = userDao.getUserById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Update only the fields that are provided in the request
+
         if (userProfileDTO.getEmail() != null) {
             user.setEmail(userProfileDTO.getEmail());
         }
-        if (userProfileDTO.getWeight() != 0) {  // Check if weight is provided
+        if (userProfileDTO.getWeight() != 0) {
             user.setWeight(userProfileDTO.getWeight());
         }
-        if (userProfileDTO.getHeight() != 0) {  // Check if height is provided
+        if (userProfileDTO.getHeight() != 0) {
             user.setHeight(userProfileDTO.getHeight());
         }
-        if (userProfileDTO.getTargetedCarbs() != 0) {  // Check if targetedCarbs is provided
+        if (userProfileDTO.getTargetedCarbs() != 0) {
             user.setTargetedCarbs(userProfileDTO.getTargetedCarbs());
         }
-        if (userProfileDTO.getTargetedProtein() != 0) {  // Check if targetedProtein is provided
+        if (userProfileDTO.getTargetedProtein() != 0) {
             user.setTargetedProtein(userProfileDTO.getTargetedProtein());
         }
-        if (userProfileDTO.getTargetedCalories() != 0) {  // Check if targetedCalories is provided
+        if (userProfileDTO.getTargetedCalories() != 0) {
             user.setTargetedCalories(userProfileDTO.getTargetedCalories());
         }
-        if (userProfileDTO.getUserType() != null) {  // Check if userType is provided
+        if (userProfileDTO.getUserType() != null) {
 
                 user.setUserType(userProfileDTO.getUserType());
 
         }
 
-        if (userProfileDTO.getGender() != null) {  // Check if gender is provided
+        if (userProfileDTO.getGender() != null) {
 
                 user.setGender(userProfileDTO.getGender());
 
         }
 
-        if (userProfileDTO.getUserUrl() != null) {  // Check if userUrl is provided
+        if (userProfileDTO.getUserUrl() != null) {
             user.setUserUrl(userProfileDTO.getUserUrl());
         }
 
-        return userDao.saveUser(user); // Save updated user
+        return userDao.saveUser(user);
     }
 
-    //  Delete user by userId
+
     public void deleteUser(int userId) {
-        userDao.deleteUser(userId);  // Delete user from the database
+        userDao.deleteUser(userId);
     }
 
-    //  Change user password
+
     public void changePassword(int userId, ChangePasswordDTO changePasswordDto) {
         Optional<User> userOptional = userDao.getUserById(userId);
         if (userOptional.isEmpty()) {
             throw new RuntimeException("User not found");
         }
         User user = userOptional.get();
-        // Set new password
+
         user.setPassword(changePasswordDto.getNewPassword());
-        userDao.saveUser(user);  // Save the updated user with the new password
+        userDao.saveUser(user);
     }
 
-    // Helper method to map User entity to UserProfileDTO
+
     private UserProfileDTO mapToUserProfileDTO(User user) {
         UserProfileDTO userProfileDto = new UserProfileDTO();
         userProfileDto.setUserId(user.getUserId());
         userProfileDto.setEmail(user.getEmail());
-        userProfileDto.setGender(user.getGender()); // Corrected: use name() to convert enum to String
         userProfileDto.setWeight(user.getWeight());
+        userProfileDto.setGender(user.getGender());
         userProfileDto.setHeight(user.getHeight());
         userProfileDto.setTargetedCarbs(user.getTargetedCarbs());
         userProfileDto.setTargetedProtein(user.getTargetedProtein());
         userProfileDto.setTargetedCalories(user.getTargetedCalories());
-        userProfileDto.setUserUrl(user.getUserUrl()); // Added userUrl
-        userProfileDto.setUserType(user.getUserType()); // Added userType, using name() for enum
+        userProfileDto.setUserUrl(user.getUserUrl());
+        userProfileDto.setUserType(user.getUserType());
         return userProfileDto;
     }
 

@@ -15,11 +15,15 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
-    @Autowired
-    private UserDao userDao;
+    private final UserDao userDao;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    public AuthService(UserDao userDao, JwtUtil jwtUtil) {
+        this.userDao = userDao;
+        this.jwtUtil = jwtUtil;
+    }
+
 
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDto) {
         Optional<User> existingUser = userDao.getUserByEmail(signupRequestDto.getEmail());
@@ -35,6 +39,7 @@ public class AuthService {
         // Hash password
         String hashedPassword = BCrypt.hashpw(signupRequestDto.getPassword(), BCrypt.gensalt());
         user.setPassword(hashedPassword);
+        user.setUserType(signupRequestDto.getUserType());
 
 //        user.setGender(User.Gender.valueOf(signupRequestDto.getGender().toUpperCase()));
 //        user.setWeight(signupRequestDto.getWeight());
@@ -76,8 +81,6 @@ public class AuthService {
     }
 
     public String logout(String token) {
-        // Token invalidation is usually handled on the client side by deleting the token.
-        // Alternatively, you can store blacklisted tokens in a database/cache.
         return "User logged out successfully.";
     }
 }

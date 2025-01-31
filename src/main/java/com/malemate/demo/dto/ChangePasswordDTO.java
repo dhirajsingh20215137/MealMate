@@ -4,7 +4,7 @@ public class ChangePasswordDTO {
 
     private String newPassword;
 
-    // Getters and Setters
+
 
     public String getNewPassword() {
         return newPassword;
