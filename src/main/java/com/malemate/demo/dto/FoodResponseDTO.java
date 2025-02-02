@@ -6,6 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 public class FoodResponseDTO {
     private int foodId;
     private String foodName;
@@ -17,6 +18,4 @@ public class FoodResponseDTO {
     private String imageUrl;
 
 
-
-    // Getters and setters
 }

@@ -9,8 +9,8 @@ import com.malemate.demo.entity.User;
 import com.malemate.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FoodService {
@@ -27,14 +27,57 @@ public class FoodService {
     }
 
     public FoodResponseDTO addFood(FoodDTO foodDTO, String token) {
-        String email = jwtUtil.extractEmail(token);
-        User user = userDao.getUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getAuthenticatedUser(token);
 
         if (!user.getUserType().equals(User.UserType.ADMIN)) {
             throw new RuntimeException("Only admins can add food items");
         }
 
+        Food food = mapToFoodEntity(foodDTO, user);
+        foodDao.save(food);
+        return mapToFoodResponseDTO(food);
+    }
+
+    public FoodResponseDTO updateFood(int foodId, FoodDTO foodDTO, String token) {
+        User user = getAuthenticatedUser(token);
+
+        if (!user.getUserType().equals(User.UserType.ADMIN)) {
+            throw new RuntimeException("Only admins can update food items");
+        }
+
+        Food food = foodDao.findById(foodId)
+                .orElseThrow(() -> new RuntimeException("Food item not found"));
+
+        updateFoodEntity(food, foodDTO);
+        foodDao.save(food);
+        return mapToFoodResponseDTO(food);
+    }
+
+    public void deleteFood(int foodId, String token) {
+        User user = getAuthenticatedUser(token);
+
+        if (!user.getUserType().equals(User.UserType.ADMIN)) {
+            throw new RuntimeException("Only admins can delete food items");
+        }
+
+        Food food = foodDao.findById(foodId)
+                .orElseThrow(() -> new RuntimeException("Food item not found"));
+
+        foodDao.delete(food);
+    }
+
+    public List<FoodResponseDTO> getAllFoodItems() {
+        List<Food> foods = foodDao.getAllFoodItems();
+        return foods.stream().map(this::mapToFoodResponseDTO).toList();
+    }
+
+    private User getAuthenticatedUser(String token) {
+        String email = jwtUtil.extractEmail(token);
+        return userDao.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private Food mapToFoodEntity(FoodDTO foodDTO, User user) {
         Food food = new Food();
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
@@ -44,23 +87,10 @@ public class FoodService {
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
         food.setImageUrl(foodDTO.getImageUrl());
         food.setUser(user);
-
-        foodDao.saveFood(food);
-        return mapToFoodResponseDTO(food);
+        return food;
     }
 
-    public FoodResponseDTO updateFood(int foodId, FoodDTO foodDTO, String token) {
-        String email = jwtUtil.extractEmail(token);
-        User user = userDao.getUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!user.getUserType().equals(User.UserType.ADMIN)) {
-            throw new RuntimeException("Only admins can update food items");
-        }
-
-        Food food = foodDao.getFoodById(foodId)
-                .orElseThrow(() -> new RuntimeException("Food item not found"));
-
+    private void updateFoodEntity(Food food, FoodDTO foodDTO) {
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
         food.setProteins(foodDTO.getProteins());
@@ -68,38 +98,18 @@ public class FoodService {
         food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
         food.setImageUrl(foodDTO.getImageUrl());
-
-        foodDao.saveFood(food);
-        return mapToFoodResponseDTO(food);
-    }
-
-    public void deleteFood(int foodId, String token) {
-        String email = jwtUtil.extractEmail(token);
-        User user = userDao.getUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!user.getUserType().equals(User.UserType.ADMIN)) {
-            throw new RuntimeException("Only admins can delete food items");
-        }
-
-        foodDao.deleteFood(foodId);
-    }
-
-    public List<FoodResponseDTO> getAllFoodItems() {
-        List<Food> foods = foodDao.getAllFoodItems();
-        return foods.stream().map(this::mapToFoodResponseDTO).toList();
     }
 
     private FoodResponseDTO mapToFoodResponseDTO(Food food) {
-        FoodResponseDTO dto = new FoodResponseDTO();
-        dto.setFoodId(food.getFoodId());
-        dto.setFoodName(food.getFoodName());
-        dto.setCalories(food.getCalories());
-        dto.setProteins(food.getProteins());
-        dto.setCarbs(food.getCarbs());
-        dto.setQuantityUnit(food.getQuantityUnit().name());
-        dto.setFoodType(food.getFoodType().name());
-        dto.setImageUrl(food.getImageUrl());
-        return dto;
+        return FoodResponseDTO.builder()
+                .foodId(food.getFoodId())
+                .foodName(food.getFoodName())
+                .calories(food.getCalories())
+                .proteins(food.getProteins())
+                .carbs(food.getCarbs())
+                .quantityUnit(food.getQuantityUnit().name())
+                .foodType(food.getFoodType().name())
+                .imageUrl(food.getImageUrl())
+                .build();
     }
 }

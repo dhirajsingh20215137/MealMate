@@ -69,12 +69,12 @@ public class AuthService {
 
         User user = userOptional.get();
 
-        // Check password
+
         if (!BCrypt.checkpw(loginRequestDto.getPassword(), user.getPassword())) {
             return new AuthResponseDTO("Invalid email or password");
         }
 
-        // Generate JWT token
+
         String token = jwtUtil.generateToken(user);
 
         return new AuthResponseDTO(token);

@@ -17,24 +17,27 @@ public class FoodDaoImplementation implements FoodDao {
     private EntityManager entityManager;
 
     @Override
-    public Optional<Food> getFoodById(int id) {
+    public Optional<Food> findById(int id) {
         return Optional.ofNullable(entityManager.find(Food.class, id));
     }
 
     @Override
-    public Food saveFood(Food food) {
+    public Food save(Food food) {
         if (food.getFoodId() == 0) {
             entityManager.persist(food);
         } else {
-            entityManager.merge(food);
+            food = entityManager.merge(food);
         }
         return food;
     }
 
     @Override
-    public void deleteFood(int id) {
-        Food food = getFoodById(id).orElseThrow(() -> new RuntimeException("Food not found"));
-        entityManager.remove(food);
+    public void delete(Food food) {
+        if (entityManager.contains(food)) {
+            entityManager.remove(food);
+        } else {
+            entityManager.remove(entityManager.merge(food));
+        }
     }
 
     @Override
@@ -57,9 +60,9 @@ public class FoodDaoImplementation implements FoodDao {
     }
 
     @Override
-    public void updateFood(Food food) {
-        if (getFoodById(food.getFoodId()).isPresent()) {
-            entityManager.merge(food);
+    public Food update(Food food) {
+        if (findById(food.getFoodId()).isPresent()) {
+            return entityManager.merge(food);
         } else {
             throw new RuntimeException("Food item not found for update");
         }

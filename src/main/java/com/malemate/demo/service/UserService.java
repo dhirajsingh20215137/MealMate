@@ -25,7 +25,7 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
         User user = userOptional.get();
-        return mapToUserProfileDTO(user);  // Map User entity to UserProfileDTO
+        return mapToUserProfileDTO(user);
     }
 
 
