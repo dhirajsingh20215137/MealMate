@@ -19,41 +19,35 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
-               .claim("roles", user.getUserType().name())
+                .claim("roles", user.getUserType().name())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-
-    public boolean validateToken(String token, String email) {
-        return email.equals(extractEmail(token)) && !isTokenExpired(token);
+    public boolean validateToken(String token) {
+        return !isTokenExpired(token);
     }
 
-
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("roles", String.class)); // Extract roles from JWT
+        return extractClaim(token, claims -> claims.get("roles", String.class));
     }
-
 
     private <T> T extractClaim(String token, ClaimsResolver<T> claimsResolver) {
         Claims claims = Jwts.parser()
@@ -63,7 +57,6 @@ public class JwtUtil {
                 .getBody();
         return claimsResolver.resolve(claims);
     }
-
 
     @FunctionalInterface
     public interface ClaimsResolver<T> {

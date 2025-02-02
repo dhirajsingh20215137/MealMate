@@ -41,18 +41,21 @@ public class MealPlannerService {
             throw new RuntimeException("Unauthorized action");
         }
 
+
         Food food = foodDao.findById(requestDTO.getFoodId())
                 .orElseThrow(() -> new RuntimeException("Food not found"));
 
 
-        if (food.getUser() != null && food.getUser().getUserId() != userId) {
-            throw new RuntimeException("You cannot add another user's custom food");
+        if (food.getFoodType() == Food.FoodType.CUSTOM_FOOD) {
+            if (food.getUser() == null || food.getUser().getUserId() != userId) {
+                throw new RuntimeException("You cannot add another user's custom food");
+            }
         }
 
         MealPlanner mealPlanner = new MealPlanner();
         mealPlanner.setUser(user);
         mealPlanner.setFood(food);
-        mealPlanner.setMealType(MealPlanner.MealType.valueOf(requestDTO.getMealType()));
+        mealPlanner.setMealType(MealPlanner.MealType.valueOf(requestDTO.getMealType().toUpperCase()));
         mealPlanner.setQuantityValue(requestDTO.getQuantityValue());
 
         mealPlannerDao.save(mealPlanner);
