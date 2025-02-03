@@ -10,6 +10,7 @@ import com.malemate.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,18 +98,28 @@ public class UserFoodService {
         foodDao.delete(food);
     }
 
-    public List<FoodResponseDTO> getUserFoodItems(String token,int userId) {
+
+    public List<FoodResponseDTO> getUserFoodItems(String token, int userId) {
         String username = jwtUtil.extractEmail(token);
         User user = userDao.getUserByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getUserId() != userId) {
-            throw new RuntimeException("You can only add food items to your own collection");
+            throw new RuntimeException("Unauthorized: You can only view your own food items");
         }
 
+        List<Food> universalFoods = foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD);
         List<Food> userFoods = foodDao.getFoodItemsByUserId(user.getUserId());
-        return userFoods.stream().map(this::mapToFoodResponseDTO).toList();
+
+
+        List<Food> allFoods = new ArrayList<>();
+        allFoods.addAll(universalFoods);
+        allFoods.addAll(userFoods);
+
+
+        return allFoods.stream().map(this::mapToFoodResponseDTO).toList();
     }
+
 
     private FoodResponseDTO mapToFoodResponseDTO(Food food) {
         return FoodResponseDTO.builder()

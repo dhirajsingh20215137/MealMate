@@ -19,7 +19,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/user/**", "/meal/**")  // Protect user and meal-related endpoints
-                .excludePathPatterns("/auth/**");  // Exclude authentication endpoints
+                .addPathPatterns("/user/**", "/meal/**")
+                .excludePathPatterns("/auth/**");
     }
 }

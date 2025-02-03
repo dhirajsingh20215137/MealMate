@@ -16,5 +16,5 @@ public class FoodDTO {
     private String foodType;
     private String imageUrl;
 
-    // Getters and setters
+
 }

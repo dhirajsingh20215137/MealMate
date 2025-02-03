@@ -4,6 +4,7 @@ import com.malemate.demo.dto.MealPlannerRequestDTO;
 import com.malemate.demo.dto.MealPlannerResponseDTO;
 import com.malemate.demo.service.MealPlannerService;
 import com.malemate.demo.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user/{userId}/meal-planner")
+@Slf4j
 public class MealPlannerController {
 
     private final MealPlannerService mealPlannerService;
@@ -28,7 +30,11 @@ public class MealPlannerController {
             @RequestBody MealPlannerRequestDTO mealPlannerRequestDTO,
             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return mealPlannerService.addFoodToMealPlan(userId, mealPlannerRequestDTO, token);
+        log.info("Adding food to meal plan for user: {}", userId);
+
+        MealPlannerResponseDTO response = mealPlannerService.addFoodToMealPlan(userId, mealPlannerRequestDTO, token);
+        log.info("Food added to meal plan for user: {} with food ID: {}", userId, mealPlannerRequestDTO.getFoodId());
+        return response;
     }
 
     @DeleteMapping("/food/{foodId}")
@@ -37,13 +43,19 @@ public class MealPlannerController {
             @PathVariable int foodId,
             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return mealPlannerService.removeFoodFromMealPlan(userId, foodId, token);
+        log.info("Removing food with ID: {} from meal plan for user: {}", foodId, userId);
+
+        String response = mealPlannerService.removeFoodFromMealPlan(userId, foodId, token);
+        log.info("Food with ID: {} removed from meal plan for user: {}", foodId, userId);
+        return response;
     }
 
-    // Get meal plan for a user
     @GetMapping
-    public List<MealPlannerResponseDTO> getUserMealPlan(@PathVariable int userId){
-      //  String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return mealPlannerService.getUserMealPlan(userId);
+    public List<MealPlannerResponseDTO> getUserMealPlan(@PathVariable int userId) {
+        log.info("Fetching meal plan for user: {}", userId);
+
+        List<MealPlannerResponseDTO> mealPlan = mealPlannerService.getUserMealPlan(userId);
+        log.info("Fetched meal plan for user: {} with {} entries", userId, mealPlan.size());
+        return mealPlan;
     }
 }

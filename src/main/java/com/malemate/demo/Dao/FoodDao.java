@@ -10,6 +10,6 @@ public interface FoodDao {
     void delete(Food food);
     List<Food> getAllFoodItems();
     List<Food> getFoodItemsByUserId(int userId);
-    List<Food> getFoodItemsByType(String foodType);
+    List<Food> getFoodItemsByType(Food.FoodType foodType);
     Food update(Food food);
 }
