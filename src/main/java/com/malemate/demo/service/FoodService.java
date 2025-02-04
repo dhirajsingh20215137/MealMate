@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Log
 @Service
@@ -71,15 +72,18 @@ public class FoodService {
         validateAdminUser(user);
 
         Food food = validateFoodExists(foodId);
-        foodDao.delete(food);
-
-        log.info("Food deleted successfully: " + food.getFoodName());
+        food.setDeleted(true);
+        foodDao.save(food);
+     log.info("Food soft deleted successfully: " + food.getFoodName());
     }
 
     public List<FoodResponseDTO> getAllFoodItems() {
         log.info("Fetching all food items");
 
-        List<Food> foods = foodDao.getAllFoodItems();
+        List<Food> foods = foodDao.getAllFoodItems().stream()
+                .filter(food -> !food.isDeleted())
+                .toList();
+
         return foods.stream().map(this::mapToFoodResponseDTO).toList();
     }
 

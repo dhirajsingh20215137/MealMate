@@ -30,9 +30,10 @@ public class UserService {
         log.info("Fetching user profile for userId: {}", userId);
 
         User user = userDao.getUserById(userId)
+                .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> {
-                    log.error("User not found for userId: {}", userId);
-                    return new ResourceNotFoundException("User not found");
+                    log.error("User not found or marked as deleted for userId: {}", userId);
+                    return new ResourceNotFoundException("User not found or marked as deleted");
                 });
 
         return mapToUserProfileDTO(user);
@@ -44,9 +45,10 @@ public class UserService {
         validateUserProfileDTO(userProfileDTO);
 
         User user = userDao.getUserById(userId)
+                .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> {
-                    log.error("User not found for userId: {}", userId);
-                    return new ResourceNotFoundException("User not found");
+                    log.error("User not found or marked as deleted for userId: {}", userId);
+                    return new ResourceNotFoundException("User not found or marked as deleted");
                 });
 
         if (StringUtils.isNotBlank(userProfileDTO.getEmail())) {
@@ -85,13 +87,21 @@ public class UserService {
     public void deleteUser(int userId) {
         log.info("Deleting user with userId: {}", userId);
 
-        if (!userDao.getUserById(userId).isPresent()) {
-            log.error("User not found for deletion with userId: {}", userId);
-            throw new ResourceNotFoundException("User not found");
-        }
 
-        userDao.deleteUser(userId);
-        log.info("User successfully deleted with userId: {}", userId);
+        User user = userDao.getUserById(userId)
+                .filter(u -> !u.isDeleted())
+                .orElseThrow(() -> {
+                    log.error("User not found or marked as deleted for userId: {}", userId);
+                    return new ResourceNotFoundException("User not found or marked as deleted");
+                });
+
+
+        user.setDeleted(true);
+
+
+        userDao.saveUser(user);
+
+        log.info("User successfully deleted (soft delete) with userId: {}", userId);
     }
 
     public void changePassword(int userId, ChangePasswordDTO changePasswordDto) {
@@ -100,9 +110,10 @@ public class UserService {
         validatePasswordChangeRequest(changePasswordDto);
 
         User user = userDao.getUserById(userId)
+                .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> {
-                    log.error("User not found for password change, userId: {}", userId);
-                    return new ResourceNotFoundException("User not found");
+                    log.error("User not found or marked as deleted for password change, userId: {}", userId);
+                    return new ResourceNotFoundException("User not found or marked as deleted");
                 });
 
         user.setPassword(changePasswordDto.getNewPassword());
@@ -133,7 +144,7 @@ public class UserService {
         }
         if (userProfileDTO.getEmail() != null && !userProfileDTO.getEmail().contains("@")) {
             log.error("Invalid email provided: {}", userProfileDTO.getEmail());
-            throw  new BadRequestException("Invalid email format");
+            throw new BadRequestException("Invalid email format");
         }
     }
 

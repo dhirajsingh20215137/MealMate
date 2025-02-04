@@ -21,7 +21,8 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDto) {
+    public ResponseEntity<AuthResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDto)
+    {
         log.info("Signup request received for email: " + signupRequestDto.getEmail());
         AuthResponseDTO response = authService.signup(signupRequestDto);
         log.info("Signup successful for email: " + signupRequestDto.getEmail());

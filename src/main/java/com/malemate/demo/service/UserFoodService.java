@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Log4j2
 @Service
@@ -105,21 +106,33 @@ public class UserFoodService {
             throw new UnauthorizedException("You can only delete your own food items");
         }
 
-        foodDao.delete(food);
+
+        food.setDeleted(true);
+        foodDao.save(food);
         log.info("Food deleted successfully for userId: {}", userId);
     }
 
     public List<FoodResponseDTO> getUserFoodItems(String token, int userId) {
         log.info("Fetching food items for userId: {}", userId);
 
+
         User user = getAuthenticatedUser(userId, token);
 
-        List<Food> universalFoods = foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD);
-        List<Food> userFoods = foodDao.getFoodItemsByUserId(user.getUserId());
+
+        List<Food> universalFoods = foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD).stream()
+                .filter(food -> !food.isDeleted())
+                .collect(Collectors.toList());
+
+
+        List<Food> userFoods = foodDao.getFoodItemsByUserId(user.getUserId()).stream()
+                .filter(food -> !food.isDeleted())
+                .collect(Collectors.toList());
+
 
         List<Food> allFoods = new ArrayList<>();
         allFoods.addAll(universalFoods);
         allFoods.addAll(userFoods);
+
 
         return allFoods.stream().map(this::mapToFoodResponseDTO).toList();
     }

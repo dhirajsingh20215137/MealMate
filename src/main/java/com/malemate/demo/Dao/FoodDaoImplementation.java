@@ -4,6 +4,7 @@ import com.malemate.demo.entity.Food;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +14,10 @@ import java.util.Optional;
 
 @Repository
 @Transactional
+@Log4j2
 public class FoodDaoImplementation implements FoodDao {
 
-    private static final Logger log = LoggerFactory.getLogger(FoodDaoImplementation.class);
+   // private static final Logger log = LoggerFactory.getLogger(FoodDaoImplementation.class);
 
     @PersistenceContext
     private EntityManager entityManager;
