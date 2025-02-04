@@ -50,11 +50,10 @@ public class FoodController {
         log.info("Food item with ID: {} deleted successfully", foodId);
     }
 
-    // Get all food items
+
     @GetMapping
     public List<FoodResponseDTO> getAllFoodItems() {
         log.info("Fetching all food items");
-
         List<FoodResponseDTO> foodItems = foodService.getAllFoodItems();
         log.info("Fetched {} food items", foodItems.size());
         return foodItems;

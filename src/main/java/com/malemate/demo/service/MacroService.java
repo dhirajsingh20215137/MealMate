@@ -5,6 +5,9 @@ import com.malemate.demo.Dao.UserDao;
 import com.malemate.demo.dto.MacroStatsDTO;
 import com.malemate.demo.entity.User;
 import com.malemate.demo.util.JwtUtil;
+import com.malemate.demo.exceptions.BadRequestException;
+import com.malemate.demo.exceptions.UnauthorizedException;
+import com.malemate.demo.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -35,12 +38,12 @@ public class MacroService {
         User user = userDao.getUserByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found for email: {}", email);
-                    return new IllegalArgumentException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
 
         if (user.getUserId() != userId) {
             log.warn("Unauthorized access attempt by userId: {}", user.getUserId());
-            throw new SecurityException("Unauthorized action");
+            throw new UnauthorizedException("Unauthorized action");
         }
 
         LocalDate targetDate = parseDate(date);
@@ -60,11 +63,11 @@ public class MacroService {
     private void validateInput(String macroType, String date, String token) {
         if (StringUtils.isBlank(token)) {
             log.error("Token is missing");
-            throw new IllegalArgumentException("Authentication token is required");
+            throw new BadRequestException("Authentication token is required");
         }
         if (StringUtils.isBlank(macroType)) {
             log.error("Macro type is missing");
-            throw new IllegalArgumentException("Macro type is required");
+            throw new BadRequestException("Macro type is required");
         }
     }
 
@@ -73,7 +76,7 @@ public class MacroService {
             return (StringUtils.isBlank(date)) ? LocalDate.now() : LocalDate.parse(date);
         } catch (DateTimeParseException e) {
             log.error("Invalid date format: {}", date);
-            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD.");
+            throw new BadRequestException("Invalid date format. Use YYYY-MM-DD.");
         }
     }
 }

@@ -4,13 +4,16 @@ import com.malemate.demo.Dao.UserDao;
 import com.malemate.demo.dto.ChangePasswordDTO;
 import com.malemate.demo.dto.UserProfileDTO;
 import com.malemate.demo.entity.User;
+import com.malemate.demo.exceptions.BadRequestException;
+import com.malemate.demo.exceptions.ResourceNotFoundException;
+import com.malemate.demo.exceptions.UnauthorizedException;
+import com.malemate.demo.exceptions.BadRequestException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @Log4j2
 @Service
@@ -29,7 +32,7 @@ public class UserService {
         User user = userDao.getUserById(userId)
                 .orElseThrow(() -> {
                     log.error("User not found for userId: {}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
 
         return mapToUserProfileDTO(user);
@@ -43,7 +46,7 @@ public class UserService {
         User user = userDao.getUserById(userId)
                 .orElseThrow(() -> {
                     log.error("User not found for userId: {}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
 
         if (StringUtils.isNotBlank(userProfileDTO.getEmail())) {
@@ -55,13 +58,13 @@ public class UserService {
         if (!Objects.isNull(userProfileDTO.getHeight()) && userProfileDTO.getHeight() > 0) {
             user.setHeight(userProfileDTO.getHeight());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedCarbs() ) && userProfileDTO.getTargetedCarbs() > 0) {
+        if (!Objects.isNull(userProfileDTO.getTargetedCarbs()) && userProfileDTO.getTargetedCarbs() > 0) {
             user.setTargetedCarbs(userProfileDTO.getTargetedCarbs());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedProtein() ) && userProfileDTO.getTargetedProtein() > 0) {
+        if (!Objects.isNull(userProfileDTO.getTargetedProtein()) && userProfileDTO.getTargetedProtein() > 0) {
             user.setTargetedProtein(userProfileDTO.getTargetedProtein());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedCalories())  && userProfileDTO.getTargetedCalories() > 0) {
+        if (!Objects.isNull(userProfileDTO.getTargetedCalories()) && userProfileDTO.getTargetedCalories() > 0) {
             user.setTargetedCalories(userProfileDTO.getTargetedCalories());
         }
         if (userProfileDTO.getUserType() != null) {
@@ -84,7 +87,7 @@ public class UserService {
 
         if (!userDao.getUserById(userId).isPresent()) {
             log.error("User not found for deletion with userId: {}", userId);
-            throw new IllegalArgumentException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
 
         userDao.deleteUser(userId);
@@ -99,7 +102,7 @@ public class UserService {
         User user = userDao.getUserById(userId)
                 .orElseThrow(() -> {
                     log.error("User not found for password change, userId: {}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
 
         user.setPassword(changePasswordDto.getNewPassword());
@@ -123,26 +126,25 @@ public class UserService {
         return userProfileDto;
     }
 
-
     private void validateUserProfileDTO(UserProfileDTO userProfileDTO) {
         if (userProfileDTO == null) {
             log.error("UserProfileDTO is null");
-            throw new IllegalArgumentException("User profile data cannot be null");
+            throw new BadRequestException("User profile data cannot be null");
         }
         if (userProfileDTO.getEmail() != null && !userProfileDTO.getEmail().contains("@")) {
             log.error("Invalid email provided: {}", userProfileDTO.getEmail());
-            throw new IllegalArgumentException("Invalid email format");
+            throw  new BadRequestException("Invalid email format");
         }
     }
 
     private void validatePasswordChangeRequest(ChangePasswordDTO changePasswordDto) {
         if (changePasswordDto == null) {
             log.error("ChangePasswordDTO is null");
-            throw new IllegalArgumentException("Password change request cannot be null");
+            throw new BadRequestException("Password change request cannot be null");
         }
         if (StringUtils.isBlank(changePasswordDto.getNewPassword()) || changePasswordDto.getNewPassword().length() < 6) {
             log.error("Invalid password provided");
-            throw new IllegalArgumentException("Password must be at least 6 characters long");
+            throw new BadRequestException("Password must be at least 6 characters long");
         }
     }
 }
