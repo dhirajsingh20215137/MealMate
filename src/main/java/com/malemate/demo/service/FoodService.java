@@ -81,7 +81,7 @@ public class FoodService {
         log.info("Fetching all food items");
 
         List<Food> foods = foodDao.getAllFoodItems().stream()
-                .filter(food -> !food.isDeleted())
+//                .filter(food -> !food.isDeleted())
                 .toList();
 
         return foods.stream().map(this::mapToFoodResponseDTO).toList();

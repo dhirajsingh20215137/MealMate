@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Log4j2
 @Service
@@ -118,21 +119,12 @@ public class UserFoodService {
 
         User user = getAuthenticatedUser(userId, token);
 
-
-        List<Food> universalFoods = foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD).stream()
-                .filter(food -> !food.isDeleted())
-                .collect(Collectors.toList());
-
-
-        List<Food> userFoods = foodDao.getFoodItemsByUserId(user.getUserId()).stream()
-                .filter(food -> !food.isDeleted())
-                .collect(Collectors.toList());
-
-
-        List<Food> allFoods = new ArrayList<>();
-        allFoods.addAll(universalFoods);
-        allFoods.addAll(userFoods);
-
+        List<Food> allFoods = Stream.concat(
+                        foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD).stream(),
+                        foodDao.getFoodItemsByUserId(user.getUserId()).stream()
+                )
+//                .filter(food -> !food.isDeleted())
+                .toList();
 
         return allFoods.stream().map(this::mapToFoodResponseDTO).toList();
     }

@@ -22,11 +22,14 @@ public class MacroDaoImplementation implements MacroDao {
     public float getUserMacroTarget(int userId, String macroType) {
         logger.info("Getting macro target for userId: {}, macroType: {}", userId, macroType);
         String field = getMacroTargetField(macroType);
-        String jpql = "SELECT u." + field + " FROM User u WHERE u.userId = :userId";
+        String jpql = "SELECT u." + field + " FROM User u WHERE u.userId = :userId AND u.deleted = false";
+
         TypedQuery<Float> query = entityManager.createQuery(jpql, Float.class);
         query.setParameter("userId", userId);
+
         Float result = query.getSingleResult();
         logger.debug("Macro target for userId: {} and macroType: {} is: {}", userId, macroType, result);
+
         return result != null ? result : 0f;
     }
 
@@ -54,9 +57,13 @@ public class MacroDaoImplementation implements MacroDao {
 
     private float getAchievedMacro(int userId, String macroType, LocalDate startDate, LocalDate endDate) {
         logger.info("Calculating achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {}", userId, macroType, startDate, endDate);
+
         String field = getMacroField(macroType);
         String jpql = "SELECT SUM(m.food." + field + " * m.quantityValue) FROM MealPlanner m " +
-                "WHERE m.user.userId = :userId AND m.createdAt BETWEEN :startDate AND :endDate";
+                "WHERE m.user.userId = :userId " +
+                "AND m.deleted = false " +  // Ensure soft delete is respected
+                "AND m.food.deleted = false " + // Ignore deleted foods
+                "AND m.createdAt BETWEEN :startDate AND :endDate";
 
         TypedQuery<Double> query = entityManager.createQuery(jpql, Double.class);
         query.setParameter("userId", userId);
@@ -65,7 +72,10 @@ public class MacroDaoImplementation implements MacroDao {
 
         Double result = query.getSingleResult();
         float achievedMacro = (result != null) ? result.floatValue() : 0f;
-        logger.debug("Achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {} is: {}", userId, macroType, startDate, endDate, achievedMacro);
+
+        logger.debug("Achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {} is: {}",
+                userId, macroType, startDate, endDate, achievedMacro);
+
         return achievedMacro;
     }
 
