@@ -40,7 +40,7 @@ public class User extends base {
 
     @Enumerated(EnumType.STRING)
     @Column(name="user_type")
-    private UserType userType;
+    private UserType userType=UserType.USER;
 
     @Column(name = "user_url")
     private  String userUrl;
@@ -140,6 +140,7 @@ public class User extends base {
         MALE, FEMALE, OTHER
     }
     public enum UserType {
+
         ADMIN, USER
     }
 

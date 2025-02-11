@@ -22,16 +22,20 @@ public class UserDaoImplementation implements UserDao {
     public Optional<User> getUserById(int id) {
         logger.info("Fetching active user by ID: {}", id);
         try {
-            User user = entityManager.createQuery("SELECT u FROM User u WHERE u.userId = :id AND u.deleted = false", User.class)
+            User user = entityManager.createQuery(
+                            "SELECT u FROM User u WHERE u.userId = :id AND u.deleted = false", User.class
+                    )
                     .setParameter("id", id)
                     .getSingleResult();
+
             logger.debug("User found with ID: {}", id);
             return Optional.of(user);
         } catch (Exception e) {
-            logger.warn("No active user found with ID: {}", id);
+            logger.warn("Error fetching user with ID {}: {}", id, e.getMessage());
             return Optional.empty();
         }
     }
+
 
     @Override
     public User saveUser(User user) {

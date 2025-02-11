@@ -37,16 +37,16 @@ public class MealPlannerController {
         return response;
     }
 
-    @DeleteMapping("/food/{foodId}")
+    @DeleteMapping("/food/{mealPlannerId}")
     public String removeFoodFromMealPlan(
             @PathVariable int userId,
-            @PathVariable int foodId,
+            @PathVariable int mealPlannerId,
             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        log.info("Removing food with ID: {} from meal plan for user: {}", foodId, userId);
+        log.info("Removing food with ID: {} from meal plan for user: {}", mealPlannerId, userId);
 
-        String response = mealPlannerService.removeFoodFromMealPlan(userId, foodId, token);
-        log.info("Food with ID: {} removed from meal plan for user: {}", foodId, userId);
+        String response = mealPlannerService.removeFoodFromMealPlan(userId, mealPlannerId, token);
+        log.info("Food with ID: {} removed from meal plan for user: {}", mealPlannerId, userId);
         return response;
     }
 

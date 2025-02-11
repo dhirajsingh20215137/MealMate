@@ -10,7 +10,7 @@ import lombok.Setter;
 public class SignupRequestDTO {
     private String email;
     private String password;
-    private User.UserType userType;
+//    private User.UserType userType;
 //    private String gender;
 //    private float weight;
 //    private float height;

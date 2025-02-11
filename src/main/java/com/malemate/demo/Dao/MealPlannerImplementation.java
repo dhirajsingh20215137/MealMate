@@ -2,6 +2,7 @@ package com.malemate.demo.Dao;
 
 import com.malemate.demo.entity.MealPlanner;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -33,17 +34,17 @@ public class MealPlannerImplementation implements MealPlannerDao {
     }
 
     @Override
-    public void deleteByUserIdAndFoodId(int userId, int foodId) {
-        logger.info("Soft deleting meal planner for userId: {}, foodId: {}", userId, foodId);
+    public void deleteByUserIdAndmealPlannerId(int userId, int mealPlannerId) {
+        logger.info("Soft deleting meal planner for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
 
-        Optional<MealPlanner> mealPlannerOpt = findByUserIdAndFoodId(userId, foodId);
+        Optional<MealPlanner> mealPlannerOpt = findByUserIdAndmealPlannerId(userId, mealPlannerId);
         if (mealPlannerOpt.isPresent()) {
             MealPlanner mealPlanner = mealPlannerOpt.get();
             mealPlanner.setDeleted(true);
             entityManager.merge(mealPlanner);  // Soft delete by setting deleted = true
-            logger.debug("Soft deleted meal planner for userId: {}, foodId: {}", userId, foodId);
+            logger.info("Soft deleted meal planner for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
         } else {
-            logger.warn("No meal planner entry found for userId: {}, foodId: {}", userId, foodId);
+            logger.warn("No meal planner entry found for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
         }
     }
 
@@ -58,19 +59,20 @@ public class MealPlannerImplementation implements MealPlannerDao {
         return mealPlanners;
     }
 
-    public Optional<MealPlanner> findByUserIdAndFoodId(int userId, int foodId) {
-        logger.info("Finding meal planner for userId: {}, foodId: {}", userId, foodId);
+    public Optional<MealPlanner> findByUserIdAndmealPlannerId(int userId, int mealPlannerId) {
+        logger.info("Finding meal planner for userId: {}, foodId: {}", userId, mealPlannerId);
         try {
             MealPlanner mealPlanner = entityManager.createQuery(
-                            "SELECT m FROM MealPlanner m WHERE m.user.userId = :userId AND m.food.foodId = :foodId AND m.deleted = false",
+                            "SELECT m FROM MealPlanner m WHERE m.user.userId = :userId AND m.mealPlannerId = :mealPlannerId AND m.deleted = false",
                             MealPlanner.class)
                     .setParameter("userId", userId)
-                    .setParameter("foodId", foodId)
+                    .setParameter("mealPlannerId", mealPlannerId)
                     .getSingleResult();
-            logger.debug("Meal planner found for userId: {}, foodId: {}", userId, foodId);
+
+            logger.info("Meal planner found for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
             return Optional.of(mealPlanner);
-        } catch (Exception e) {
-            logger.warn("No active meal planner found for userId: {}, foodId: {}", userId, foodId);
+        } catch (NoResultException e) {
+            logger.warn("No active meal planner found for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
             return Optional.empty();
         }
     }

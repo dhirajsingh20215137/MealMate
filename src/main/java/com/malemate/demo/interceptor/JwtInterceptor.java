@@ -22,7 +22,14 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // ✅ Skip JWT validation for CORS Preflight (OPTIONS requests)
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return true;
+        }
+
         String authorizationHeader = request.getHeader("Authorization");
+        log.info("Authorization Header: {}", authorizationHeader);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             log.error("Missing or invalid Authorization header");
@@ -31,7 +38,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        String token = authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7);  // Remove "Bearer " prefix
 
         try {
             String email = jwtUtil.extractEmail(token);

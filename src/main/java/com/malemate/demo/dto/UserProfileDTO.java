@@ -11,7 +11,7 @@ import lombok.Setter;
 public class UserProfileDTO {
 
     private int userId;
-    private String email;
+    //private String email;
     private User.Gender gender;
     private float weight;
     private float height;
@@ -19,7 +19,7 @@ public class UserProfileDTO {
     private float targetedProtein;
     private float targetedCalories;
     private String UserUrl;
-    private User.UserType userType;
+   // private User.UserType userType;
 
 
 

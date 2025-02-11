@@ -6,7 +6,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
 public class FoodDTO {
     private String foodName;
     private float calories;
@@ -14,7 +13,9 @@ public class FoodDTO {
     private float carbs;
     private String quantityUnit;
     private String foodType;
-    private String imageUrl;
+   private String imageUrl;
 
+    public FoodDTO() {
+    }
 
 }

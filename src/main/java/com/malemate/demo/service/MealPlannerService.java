@@ -68,12 +68,12 @@ public class MealPlannerService {
         return mapToMealPlannerResponseDTO(mealPlanner);
     }
 
-    public String removeFoodFromMealPlan(int userId, int foodId, String token) {
-        log.info("Removing food from meal plan for userId: {}, foodId: {}", userId, foodId);
+    public String removeFoodFromMealPlan(int userId, int mealPlannerId, String token) {
+        log.info("Removing food from meal plan for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
 
         User user = getAuthenticatedUser(userId, token);
 
-        mealPlannerDao.deleteByUserIdAndFoodId(user.getUserId(), foodId);
+        mealPlannerDao.deleteByUserIdAndmealPlannerId(user.getUserId(), mealPlannerId);
         log.info("Food removed from meal plan for userId: {}", userId);
 
         return "Food removed from meal plan";

@@ -15,9 +15,16 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +35,7 @@ public class UserFoodService {
     private final FoodDao foodDao;
     private final UserDao userDao;
     private final JwtUtil jwtUtil;
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
     @Autowired
     public UserFoodService(FoodDao foodDao, UserDao userDao, JwtUtil jwtUtil) {
@@ -36,13 +44,17 @@ public class UserFoodService {
         this.jwtUtil = jwtUtil;
     }
 
-    public FoodResponseDTO addUserFood(FoodDTO foodDTO, String token, int userId) {
+    public FoodResponseDTO addUserFood(FoodDTO foodDTO, String token, int userId, MultipartFile file) {
         log.info("Adding food to user collection for userId: {}", userId);
 
+        // Validate user and food request
         validateUserFoodRequest(foodDTO, token, userId);
 
+        // Authenticate user
         User user = getAuthenticatedUser(userId, token);
+        log.info("Authenticated user: {}", userId);
 
+        // Create Food entity
         Food food = new Food();
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
@@ -50,14 +62,111 @@ public class UserFoodService {
         food.setCarbs(foodDTO.getCarbs());
         food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
-        food.setImageUrl(foodDTO.getImageUrl());
         food.setUser(user);
 
+        // Handle photo upload if a file is provided
+        if (file != null && !file.isEmpty()) {
+            log.info("Uploading photo for food: {}", foodDTO.getFoodName());
+
+            // Ensure the upload directory exists
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(uploadPath)) {
+                try {
+                    Files.createDirectories(uploadPath);
+                    log.info("Created upload directory: {}", uploadPath.toString());
+                } catch (IOException e) {
+                    log.error("Error creating upload directory: {}", e.getMessage(), e);
+                }
+            }
+
+            // Generate a unique filename for the uploaded photo
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                log.error("Uploaded file has no name");
+                return null; // Handle accordingly (e.g., return an error response)
+            }
+
+            // Get file extension and create unique filename
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+            String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
+
+            // Define the path where the file will be saved
+            Path filePath = uploadPath.resolve(uniqueFilename);
+            log.info("Saving file to: {}", filePath.toString());
+
+            try {
+                // Save the file to the server
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Food image saved with filename: {}", uniqueFilename);
+            } catch (IOException e) {
+                log.error("Error saving file: {}", e.getMessage(), e);
+                return null; // Handle accordingly (e.g., return an error response)
+            }
+
+            // Set the image URL (filename) in the food object
+            food.setImageUrl(uniqueFilename);
+        } else {
+            // If no file is provided, use the filename from the foodDTO
+            food.setImageUrl(foodDTO.getImageUrl());
+            log.info("No image file uploaded. Using provided image URL: {}", foodDTO.getImageUrl());
+        }
+
+        // Save the food object in the database
         foodDao.save(food);
-        log.info("Food added successfully to userId: {}", userId);
+        log.info("Food added successfully for userId: {}", userId);
 
         return mapToFoodResponseDTO(food);
     }
+
+
+    public Food uploadFoodImage(MultipartFile file, int userId) throws IOException {
+        log.info("Uploading food image for userId: {}", userId);
+
+        // Fetch user (Ensure user exists and is not deleted)
+        User user = userDao.getUserById(userId)
+                .filter(u -> !u.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found or marked as deleted"));
+
+        // Create the upload directory if it doesn't exist
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Get the original file name and create a unique name
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+        String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
+
+        // Define the path where the file will be saved
+        Path filePath = uploadPath.resolve(uniqueFilename);
+
+        try {
+            // Copy the file to the destination
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("Failed to upload file: {}", e.getMessage(), e);
+            throw new IOException("Failed to upload file: " + e.getMessage(), e);
+        }
+
+        // Create the food object and set the image URL
+        Food food = new Food();
+        food.setUser(user); // Associate the food with the user
+        food.setImageUrl(uniqueFilename); // Save only the filename (e.g., abc123_image.jpg)
+
+        // Save the food object to the database
+        foodDao.save(food);
+
+        log.info("Food image uploaded successfully for userId: {}", userId);
+        return food; // Return the food object with the image URL
+    }
+
+
+
+
+
 
     public FoodResponseDTO updateUserFood(int foodId, FoodDTO foodDTO, String token, int userId) {
         log.info("Updating food for userId: {}, foodId: {}", userId, foodId);
@@ -83,6 +192,8 @@ public class UserFoodService {
         food.setCarbs(foodDTO.getCarbs());
         food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
+
+        // Directly set the updated image filename
         food.setImageUrl(foodDTO.getImageUrl());
 
         foodDao.save(food);
@@ -90,6 +201,7 @@ public class UserFoodService {
 
         return mapToFoodResponseDTO(food);
     }
+
 
     public void deleteUserFood(int foodId, String token, int userId) {
         log.info("Deleting food for userId: {}, foodId: {}", userId, foodId);
@@ -160,6 +272,8 @@ public class UserFoodService {
             throw new UnauthorizedException("Unauthorized action");
         }
 
+        log.info("User authenticated successfully for userId: {}", userId);
+
         return user;
     }
 
@@ -196,5 +310,7 @@ public class UserFoodService {
             log.error("Quantity unit is missing");
             throw new BadRequestException("Quantity unit is required");
         }
+
+        log.info("validation successfull");
     }
 }

@@ -4,12 +4,12 @@ import com.malemate.demo.dto.AuthResponseDTO;
 import com.malemate.demo.dto.LoginRequestDTO;
 import com.malemate.demo.dto.SignupRequestDTO;
 import com.malemate.demo.service.AuthService;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Log
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -21,19 +21,18 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDto)
-    {
-        log.info("Signup request received for email: " + signupRequestDto.getEmail());
+    public ResponseEntity<AuthResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDto) {
+        log.info("Signup request received for email: {}", signupRequestDto.getEmail());
         AuthResponseDTO response = authService.signup(signupRequestDto);
-        log.info("Signup successful for email: " + signupRequestDto.getEmail());
+        log.info("Signup successful for email: {}", signupRequestDto.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDto) {
-        log.info("Login attempt for email: " + loginRequestDto.getEmail());
+        log.info("Login request received for email: {}", loginRequestDto.getEmail());
         AuthResponseDTO response = authService.login(loginRequestDto);
-        log.info("Login successful for email: " + loginRequestDto.getEmail());
+        log.info("Login successful for email: {}", loginRequestDto.getEmail());
         return ResponseEntity.ok(response);
     }
 
