@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,12 +51,17 @@ public class MealPlannerImplementation implements MealPlannerDao {
 
     @Override
     public List<MealPlanner> findByUserId(int userId) {
-        logger.info("Finding active meal planners for userId: {}", userId);
+        logger.info("Finding daily meal planners for userId: {}", userId);
+
+        LocalDate today = LocalDate.now();
         List<MealPlanner> mealPlanners = entityManager.createQuery(
-                        "SELECT m FROM MealPlanner m WHERE m.user.userId = :userId AND m.deleted = false", MealPlanner.class)
+                        "SELECT m FROM MealPlanner m WHERE m.user.userId = :userId " +
+                                "AND m.deleted = false AND DATE(m.createdAt) = :today", MealPlanner.class)
                 .setParameter("userId", userId)
+                .setParameter("today", today)
                 .getResultList();
-        logger.debug("Found {} meal planners for userId: {}", mealPlanners.size(), userId);
+
+        logger.debug("Found {} meal planners for userId: {} on {}", mealPlanners.size(), userId, today);
         return mealPlanners;
     }
 

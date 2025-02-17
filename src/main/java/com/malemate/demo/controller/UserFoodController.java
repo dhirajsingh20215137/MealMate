@@ -39,34 +39,38 @@ public class UserFoodController {
     }
 
     @PostMapping
-    public FoodResponseDTO addUserFood(
+    public List<FoodResponseDTO> addUserFood(
             @PathVariable int userId,
             @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam("foodDTO") String foodDTOJson,  // Get foodDTO as string
+            @RequestParam("foodDTO") String foodDTOJson,
             @RequestHeader("Authorization") String authorizationHeader) {
 
         // Extract token from the authorization header
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
 
-        FoodDTO foodDTO = null;
+        FoodDTO foodDTO;
         try {
-            // Parse foodDTO from the JSON string
+            // Parse foodDTO from JSON
             ObjectMapper objectMapper = new ObjectMapper();
             foodDTO = objectMapper.readValue(foodDTOJson, FoodDTO.class);
         } catch (JsonProcessingException e) {
-            // Handle the exception (log it or return an error response)
             log.error("Error parsing foodDTO JSON: {}", e.getMessage());
-            // Optionally return an error response if JSON parsing fails
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid foodDTO data", e);
         }
 
         log.info("Adding food for user: {}, food name: {}", userId, foodDTO.getFoodName());
 
-        // Pass the foodDTO, token, userId, and file (if present) to the service method
-        FoodResponseDTO response = userFoodService.addUserFood(foodDTO, token, userId, file);
+        // Add the food item
+        userFoodService.addUserFood(foodDTO, token, userId, file);
 
-        log.info("Food added for user: {}, food name: {}", userId, foodDTO.getFoodName());
-        return response;
+        log.info("Food added for user: {}", userId);
+
+
+        List<FoodResponseDTO> foodItems = userFoodService.getUserFoodItems(token, userId);
+
+        log.info("Fetched {} food items for user: {}", foodItems.size(), userId);
+
+        return foodItems;
     }
 
 

@@ -6,8 +6,10 @@ import com.malemate.demo.dto.UserProfileDTO;
 import com.malemate.demo.entity.User;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.ResourceNotFoundException;
+import com.malemate.demo.exceptions.UnauthorizedException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +24,6 @@ public class UserService {
 
     private final UserDao userDao;
 
-//    private static final String UPLOAD_DIR = "uploads/";  //
 private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
 
@@ -46,7 +47,7 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         return mapToUserProfileDTO(user);
     }
 
-    // ✅ 2. Update User Profile
+
     public void updateUserProfile(int userId, UserProfileDTO userProfileDTO) {
         log.info("Updating profile for userId: {}", userId);
         validateUserProfileDTO(userProfileDTO);
@@ -55,19 +56,35 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
                 .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found or marked as deleted"));
 
-        if (!Objects.isNull(userProfileDTO.getWeight()) && userProfileDTO.getWeight() > 0) {
+
+        if (StringUtils.isNotBlank(userProfileDTO.getCurrentPassword())
+                && StringUtils.isNotBlank(userProfileDTO.getNewPassword())) {
+
+            if (!BCrypt.checkpw(userProfileDTO.getCurrentPassword(), user.getPassword())) {
+                log.error("Current password is incorrect.");
+                throw new UnauthorizedException("Current password is incorrect");
+            }
+
+
+            String hashedNewPassword = BCrypt.hashpw(userProfileDTO.getNewPassword(), BCrypt.gensalt());
+            user.setPassword(hashedNewPassword);
+            log.info("Password updated for userId: {}", userId);
+        }
+
+
+        if (userProfileDTO.getWeight() > 0) {
             user.setWeight(userProfileDTO.getWeight());
         }
-        if (!Objects.isNull(userProfileDTO.getHeight()) && userProfileDTO.getHeight() > 0) {
+        if (userProfileDTO.getHeight() > 0) {
             user.setHeight(userProfileDTO.getHeight());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedCarbs()) && userProfileDTO.getTargetedCarbs() > 0) {
+        if (userProfileDTO.getTargetedCarbs() > 0) {
             user.setTargetedCarbs(userProfileDTO.getTargetedCarbs());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedProtein()) && userProfileDTO.getTargetedProtein() > 0) {
+        if (userProfileDTO.getTargetedProtein() > 0) {
             user.setTargetedProtein(userProfileDTO.getTargetedProtein());
         }
-        if (!Objects.isNull(userProfileDTO.getTargetedCalories()) && userProfileDTO.getTargetedCalories() > 0) {
+        if (userProfileDTO.getTargetedCalories() > 0) {
             user.setTargetedCalories(userProfileDTO.getTargetedCalories());
         }
         if (userProfileDTO.getGender() != null) {
@@ -78,8 +95,10 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         }
 
         userDao.saveUser(user);
+
         log.info("User profile updated successfully for userId: {}", userId);
     }
+
 
 
     public User uploadProfileImage(MultipartFile file, int userId) throws IOException {
@@ -117,10 +136,6 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         return user;
     }
 
-
-
-
-    // ✅ 4. Delete User
     public void deleteUser(int userId) {
         log.info("Deleting user with userId: {}", userId);
 
@@ -134,7 +149,7 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         log.info("User successfully deleted (soft delete) with userId: {}", userId);
     }
 
-    // ✅ 5. Change Password
+
     public void changePassword(int userId, ChangePasswordDTO changePasswordDto) {
         log.info("Changing password for userId: {}", userId);
 
@@ -150,7 +165,7 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         log.info("Password changed successfully for userId: {}", userId);
     }
 
-    // ✅ Helper Methods
+
     private UserProfileDTO mapToUserProfileDTO(User user) {
         UserProfileDTO userProfileDto = new UserProfileDTO();
         userProfileDto.setUserId(user.getUserId());

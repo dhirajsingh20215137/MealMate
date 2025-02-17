@@ -9,12 +9,12 @@ import org.springframework.util.unit.DataSize;
 @Configuration
 public class MultipartConfig {
 
-    // Bean to configure file upload settings (max file size, max request size, etc.)
+
     @Bean
     public MultipartConfigElement multipartConfigElement() {
         MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(DataSize.ofMegabytes(5));  // Set max file size to 5MB
-        factory.setMaxRequestSize(DataSize.ofMegabytes(10));  // Set max request size to 10MB
+        factory.setMaxFileSize(DataSize.ofMegabytes(5));
+        factory.setMaxRequestSize(DataSize.ofMegabytes(10));
         return factory.createMultipartConfig();
     }
 }

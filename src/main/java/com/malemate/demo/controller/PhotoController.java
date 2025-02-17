@@ -22,7 +22,6 @@ public class PhotoController {
         this.userService = userService;
     }
 
-    // ✅ Upload Profile Photo
     @PostMapping("/upload-photo")
     public ResponseEntity<?> uploadProfilePhoto(
             @PathVariable int userId,

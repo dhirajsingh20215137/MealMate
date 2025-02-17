@@ -13,18 +13,18 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                // Allowing all routes from your frontend URL
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")  // Frontend URL
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("Authorization", "Content-Type")  // Allowing necessary headers
-                        .allowCredentials(true);  // Required for cookies
 
-                // Allow specific access to /uploads/ route for image fetching
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("Authorization", "Content-Type")
+                        .allowCredentials(true);
+
+
                 registry.addMapping("/uploads/**")
-                        .allowedOrigins("http://localhost:5173")  // Frontend URL
-                        .allowedMethods("GET")  // Allow only GET requests to fetch images
-                        .allowedHeaders("Content-Type");  // Allow content type header
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET")
+                        .allowedHeaders("Content-Type");
             }
         };
     }

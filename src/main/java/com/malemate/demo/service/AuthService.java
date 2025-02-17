@@ -14,6 +14,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -29,11 +30,12 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    // ✅ SIGNUP Method
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDto) {
         log.info("Signup request received for email: {}", signupRequestDto.getEmail());
 
         validateSignup(signupRequestDto);
+
+        log.info("Signup successful for email: {}", signupRequestDto.getEmail());
 
         Optional<User> existingUser = userDao.getUserByEmail(signupRequestDto.getEmail());
         if (existingUser.isPresent()) {
@@ -41,29 +43,47 @@ public class AuthService {
             throw new BadRequestException("Email already exists");
         }
 
-        // ✅ Create User
         User user = new User();
         user.setEmail(signupRequestDto.getEmail());
         user.setPassword(BCrypt.hashpw(signupRequestDto.getPassword(), BCrypt.gensalt()));
 
+
+        if (Objects.nonNull(signupRequestDto.getGender())) {
+            user.setGender(signupRequestDto.getGender());
+        }
+        if (Objects.nonNull(signupRequestDto.getWeight())) {
+            user.setWeight(signupRequestDto.getWeight());
+        }
+        if (Objects.nonNull(signupRequestDto.getHeight())) {
+            user.setHeight(signupRequestDto.getHeight());
+        }
+        if (Objects.nonNull(signupRequestDto.getTargetedCarbs())) {
+            user.setTargetedCarbs(signupRequestDto.getTargetedCarbs());
+        }
+        if (Objects.nonNull(signupRequestDto.getTargetedProtein())) {
+            user.setTargetedProtein(signupRequestDto.getTargetedProtein());
+        }
+        if (Objects.nonNull(signupRequestDto.getTargetedCalories())) {
+            user.setTargetedCalories(signupRequestDto.getTargetedCalories());
+        }
+
+
         userDao.saveUser(user);
         log.info("User successfully created with email: {}", signupRequestDto.getEmail());
 
-        // ✅ Generate Token
         String token = jwtUtil.generateToken(user);
         log.info("Token generated for user with email: {}", signupRequestDto.getEmail());
 
-        // ✅ Return both token and user
         return new AuthResponseDTO(token, user);
     }
 
-    // ✅ LOGIN Method
+
     public AuthResponseDTO login(LoginRequestDTO loginRequestDto) {
         log.info("Login attempt for email: {}", loginRequestDto.getEmail());
 
         validateLogin(loginRequestDto);
 
-        // ✅ Fetch User
+
         Optional<User> userOptional = userDao.getUserByEmail(loginRequestDto.getEmail());
         if (userOptional.isEmpty() || !BCrypt.checkpw(loginRequestDto.getPassword(), userOptional.get().getPassword())) {
             log.error("Login failed: Invalid credentials for email: {}", loginRequestDto.getEmail());
@@ -73,15 +93,15 @@ public class AuthService {
         User user = userOptional.get();
         log.info("User authenticated successfully for email: {}", user.getEmail());
 
-        // ✅ Generate Token
+
         String token = jwtUtil.generateToken(user);
         log.info("Token generated for user with email: {}", user.getEmail());
 
-        // ✅ Return both token and user
+
         return new AuthResponseDTO(token, user);
     }
 
-    // ✅ Signup Validation
+
     private void validateSignup(SignupRequestDTO signupRequestDto) {
         if (StringUtils.isBlank(signupRequestDto.getEmail())) {
             log.error("Signup validation failed: Email is required");
@@ -94,7 +114,7 @@ public class AuthService {
         log.info("Signup validation passed for email: {}", signupRequestDto.getEmail());
     }
 
-    // ✅ Login Validation
+
     private void validateLogin(LoginRequestDTO loginRequestDto) {
         if (StringUtils.isBlank(loginRequestDto.getEmail())) {
             log.error("Login validation failed: Email is required");

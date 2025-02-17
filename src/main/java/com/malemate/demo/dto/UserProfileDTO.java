@@ -20,6 +20,8 @@ public class UserProfileDTO {
     private float targetedCalories;
     private String UserUrl;
    // private User.UserType userType;
+   private String currentPassword;
+    private String newPassword;
 
 
 

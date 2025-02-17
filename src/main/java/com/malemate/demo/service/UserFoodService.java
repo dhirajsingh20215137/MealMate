@@ -45,7 +45,7 @@ public class UserFoodService {
     }
 
     public FoodResponseDTO addUserFood(FoodDTO foodDTO, String token, int userId, MultipartFile file) {
-        log.info("Adding food to user collection for userId: {}", userId);
+        log.info("Adding food to collection for userId: {}", userId);
 
         // Validate user and food request
         validateUserFoodRequest(foodDTO, token, userId);
@@ -54,15 +54,32 @@ public class UserFoodService {
         User user = getAuthenticatedUser(userId, token);
         log.info("Authenticated user: {}", userId);
 
+        // Determine food type based on user role
+        Food.FoodType foodType;
+        if (user.getUserType() == User.UserType.ADMIN) {
+            foodType = Food.FoodType.UNIVERSAL_FOOD;
+        } else if (user.getUserType() == User.UserType.USER) {
+            foodType = Food.FoodType.CUSTOM_FOOD;
+        } else {
+            log.warn("Unauthorized role attempting to add food: {}", user.getUserType());
+            throw new UnauthorizedException("Invalid user role.");
+        }
+
         // Create Food entity
         Food food = new Food();
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
         food.setProteins(foodDTO.getProteins());
         food.setCarbs(foodDTO.getCarbs());
-        food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
+        food.setFoodType(foodType); // Enforce food type based on user role
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
-        food.setUser(user);
+
+        // Only assign user if it's a CUSTOM_FOOD
+        if (foodType == Food.FoodType.CUSTOM_FOOD) {
+            food.setUser(user);
+        } else {
+            food.setUser(null); // Universal foods should have no associated user
+        }
 
         // Handle photo upload if a file is provided
         if (file != null && !file.isEmpty()) {
@@ -76,32 +93,32 @@ public class UserFoodService {
                     log.info("Created upload directory: {}", uploadPath.toString());
                 } catch (IOException e) {
                     log.error("Error creating upload directory: {}", e.getMessage(), e);
+                    throw new RuntimeException("Error creating upload directory", e);
                 }
             }
 
-            // Generate a unique filename for the uploaded photo
+            // Generate a unique filename
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null || originalFilename.isEmpty()) {
                 log.error("Uploaded file has no name");
-                return null; // Handle accordingly (e.g., return an error response)
+                throw new IllegalArgumentException("Invalid file name");
             }
 
-            // Get file extension and create unique filename
+            // Extract file extension and generate a unique name
             String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
             String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
 
-            // Define the path where the file will be saved
+            // Define file path
             Path filePath = uploadPath.resolve(uniqueFilename);
             log.info("Saving file to: {}", filePath.toString());
 
             try {
-                // Save the file to the server
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 log.info("Food image saved with filename: {}", uniqueFilename);
             } catch (IOException e) {
                 log.error("Error saving file: {}", e.getMessage(), e);
-                return null; // Handle accordingly (e.g., return an error response)
+                throw new RuntimeException("Error saving file", e);
             }
 
             // Set the image URL (filename) in the food object
@@ -114,7 +131,7 @@ public class UserFoodService {
 
         // Save the food object in the database
         foodDao.save(food);
-        log.info("Food added successfully for userId: {}", userId);
+        log.info("Food added successfully for userId: {} as {}", userId, foodType);
 
         return mapToFoodResponseDTO(food);
     }
@@ -172,7 +189,6 @@ public class UserFoodService {
         log.info("Updating food for userId: {}, foodId: {}", userId, foodId);
 
         validateUserFoodRequest(foodDTO, token, userId);
-
         User user = getAuthenticatedUser(userId, token);
 
         Food food = foodDao.findById(foodId)
@@ -181,48 +197,75 @@ public class UserFoodService {
                     return new ResourceNotFoundException("Food item not found");
                 });
 
-        if (!food.getUser().equals(user)) {
-            log.warn("Unauthorized food update attempt for userId: {}", userId);
-            throw new UnauthorizedException("You can only update your own food items");
+        // Check permissions based on user type and food type
+        if (user.getUserType() == User.UserType.USER) {
+            if (food.getFoodType() != Food.FoodType.CUSTOM_FOOD || (food.getUser().getUserId()!=(userId))  ) {
+                log.warn("Unauthorized attempt to update foodId: {} by userId: {}", foodId, userId);
+                throw new UnauthorizedException("Users can only update their own custom food items.");
+            }
+        } else if (user.getUserType() == User.UserType.ADMIN) {
+            if (food.getFoodType() != Food.FoodType.UNIVERSAL_FOOD) {
+                log.warn("Admin attempted to update non-universal foodId: {}", foodId);
+                throw new UnauthorizedException("Admins can only update universal food items.");
+            }
+        } else {
+            log.warn("Unauthorized role attempting to update foodId: {}", foodId);
+            throw new UnauthorizedException("Invalid user role.");
         }
 
+        // Update food details
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
         food.setProteins(foodDTO.getProteins());
         food.setCarbs(foodDTO.getCarbs());
         food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
-
-        // Directly set the updated image filename
         food.setImageUrl(foodDTO.getImageUrl());
 
         foodDao.save(food);
-        log.info("Food updated successfully for userId: {}", userId);
+        log.info("Food updated successfully for foodId: {} by userId: {}", foodId, userId);
 
         return mapToFoodResponseDTO(food);
     }
 
 
+
     public void deleteUserFood(int foodId, String token, int userId) {
         log.info("Deleting food for userId: {}, foodId: {}", userId, foodId);
 
+        // Authenticate user
         User user = getAuthenticatedUser(userId, token);
+        log.info("Authenticated user: {}", userId);
 
+        // Fetch the food item
         Food food = foodDao.findById(foodId)
                 .orElseThrow(() -> {
                     log.error("Food item not found for foodId: {}", foodId);
                     return new ResourceNotFoundException("Food item not found");
                 });
 
-        if (!food.getUser().equals(user)) {
-            log.warn("Unauthorized food delete attempt for userId: {}", userId);
-            throw new UnauthorizedException("You can only delete your own food items");
+        // Determine deletion rules based on user type
+        if (user.getUserType() == User.UserType.ADMIN) {
+            // Admins can only delete universal foods
+            if (food.getFoodType() != Food.FoodType.UNIVERSAL_FOOD) {
+                log.warn("Admin attempted to delete a non-universal food: foodId={}", foodId);
+                throw new UnauthorizedException("Admins can only delete universal foods");
+            }
+        } else if (user.getUserType() == User.UserType.USER) {
+            // Users can only delete their own custom foods
+            if (food.getFoodType() != Food.FoodType.CUSTOM_FOOD || !food.getUser().equals(user)) {
+                log.warn("Unauthorized delete attempt by userId: {} for foodId: {}", userId, foodId);
+                throw new UnauthorizedException("You can only delete your own custom food items");
+            }
+        } else {
+            log.warn("Unauthorized role attempting to delete food: {}", user.getUserType());
+            throw new UnauthorizedException("Invalid user role");
         }
 
-
+        // Soft delete the food item
         food.setDeleted(true);
         foodDao.save(food);
-        log.info("Food deleted successfully for userId: {}", userId);
+        log.info("Food deleted successfully by userId: {} (foodId: {})", userId, foodId);
     }
 
     public List<FoodResponseDTO> getUserFoodItems(String token, int userId) {

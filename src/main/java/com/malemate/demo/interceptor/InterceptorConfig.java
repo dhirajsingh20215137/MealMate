@@ -19,6 +19,6 @@ public class InterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/user/**", "/meal/**")
-                .excludePathPatterns("/auth/**", "/upload/**"); // Correct pat// ✅ Exclude static uploads
+                .excludePathPatterns("/auth/**", "/upload/**");
     }
 }

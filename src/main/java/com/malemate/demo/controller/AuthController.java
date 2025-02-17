@@ -24,7 +24,7 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDto) {
         log.info("Signup request received for email: {}", signupRequestDto.getEmail());
         AuthResponseDTO response = authService.signup(signupRequestDto);
-        log.info("Signup successful for email: {}", signupRequestDto.getEmail());
+        log.info("Signup successful for email: {}", signupRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -36,10 +36,4 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        log.info("Logout request received");
-        log.info("Logout successful");
-        return ResponseEntity.ok("Logout successful. Invalidate JWT token on the client side.");
-    }
 }
