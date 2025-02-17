@@ -25,11 +25,5 @@ public class MacroStatsDTO {
         this.monthlyTarget = monthlyTarget;
         this.monthlyAchieved = monthlyAchieved;
     }
-//
-//    public float getDailyTarget() { return dailyTarget; }
-//    public float getDailyAchieved() { return dailyAchieved; }
-//    public float getWeeklyTarget() { return weeklyTarget; }
-//    public float getWeeklyAchieved() { return weeklyAchieved; }
-//    public float getMonthlyTarget() { return monthlyTarget; }
-//    public float getMonthlyAchieved() { return monthlyAchieved; }
+
 }

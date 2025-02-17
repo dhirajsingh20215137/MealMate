@@ -1,8 +1,8 @@
 package com.malemate.demo.service;
 
-import com.malemate.demo.Dao.FoodDao;
-import com.malemate.demo.Dao.MealPlannerDao;
-import com.malemate.demo.Dao.UserDao;
+import com.malemate.demo.dao.FoodDao;
+import com.malemate.demo.dao.MealPlannerDao;
+import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.MealPlannerRequestDTO;
 import com.malemate.demo.dto.MealPlannerResponseDTO;
 import com.malemate.demo.entity.Food;
@@ -39,9 +39,7 @@ public class MealPlannerService {
 
     public MealPlannerResponseDTO addFoodToMealPlan(int userId, MealPlannerRequestDTO requestDTO, String token) {
         log.info("Adding food to meal plan for userId: {}, foodId: {}", userId, requestDTO.getFoodId());
-
         validateMealPlannerRequest(requestDTO, token);
-
         User user = getAuthenticatedUser(userId, token);
         Food food = foodDao.findById(requestDTO.getFoodId())
                 .orElseThrow(() -> {
@@ -55,33 +53,26 @@ public class MealPlannerService {
                 throw new UnauthorizedException("You cannot add another user's custom food");
             }
         }
-
         MealPlanner mealPlanner = new MealPlanner();
         mealPlanner.setUser(user);
         mealPlanner.setFood(food);
         mealPlanner.setMealType(MealPlanner.MealType.valueOf(requestDTO.getMealType().toUpperCase()));
         mealPlanner.setQuantityValue(requestDTO.getQuantityValue());
-
         mealPlannerDao.save(mealPlanner);
-
         log.info("Food successfully added to meal plan for userId: {}", userId);
         return mapToMealPlannerResponseDTO(mealPlanner);
     }
 
     public String removeFoodFromMealPlan(int userId, int mealPlannerId, String token) {
         log.info("Removing food from meal plan for userId: {}, mealPlannerId: {}", userId, mealPlannerId);
-
         User user = getAuthenticatedUser(userId, token);
-
         mealPlannerDao.deleteByUserIdAndmealPlannerId(user.getUserId(), mealPlannerId);
         log.info("Food removed from meal plan for userId: {}", userId);
-
         return "Food removed from meal plan";
     }
 
     public List<MealPlannerResponseDTO> getUserMealPlan(int userId) {
         log.info("Fetching meal plan for userId: {}", userId);
-
         List<MealPlanner> mealPlans = mealPlannerDao.findByUserId(userId);
         return mealPlans.stream()
                 .map(this::mapToMealPlannerResponseDTO)
@@ -106,12 +97,10 @@ public class MealPlannerService {
                     log.error("User not found for email: {}", email);
                     return new ResourceNotFoundException("User not found");
                 });
-
         if (user.getUserId() != userId) {
             log.warn("Unauthorized access attempt by userId: {}", user.getUserId());
             throw new UnauthorizedException("Unauthorized action");
         }
-
         return user;
     }
 

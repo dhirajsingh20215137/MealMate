@@ -1,6 +1,6 @@
 package com.malemate.demo.service;
 
-import com.malemate.demo.Dao.UserDao;
+import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.ChangePasswordDTO;
 import com.malemate.demo.dto.UserProfileDTO;
 import com.malemate.demo.entity.User;
@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Objects;
 
 @Log4j2
 @Service

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "meal_planner")
-public class MealPlanner extends base {
+public class MealPlanner extends BaseEntity {
 
 
     @Id
@@ -27,7 +27,7 @@ public class MealPlanner extends base {
     @Column(name = "quantity_value", nullable = false)
     private float quantityValue;
 
-    // Getters and Setters
+
     public int getMealPlannerId() {
         return mealPlannerId;
     }

@@ -13,12 +13,11 @@ import java.io.IOException;
 @Log4j2
 @RestController
 @RequestMapping("/user/{userId}/photo")
-@CrossOrigin(origins = "http://localhost:5173")
-public class PhotoController {
+public class UserProfilePhotoController {
 
     private final UserService userService;
 
-    public PhotoController(UserService userService) {
+    public UserProfilePhotoController(UserService userService) {
         this.userService = userService;
     }
 

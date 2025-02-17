@@ -1,4 +1,4 @@
-package com.malemate.demo.Dao;
+package com.malemate.demo.dao;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -23,13 +23,10 @@ public class MacroDaoImplementation implements MacroDao {
         logger.info("Getting macro target for userId: {}, macroType: {}", userId, macroType);
         String field = getMacroTargetField(macroType);
         String jpql = "SELECT u." + field + " FROM User u WHERE u.userId = :userId AND u.deleted = false";
-
         TypedQuery<Float> query = entityManager.createQuery(jpql, Float.class);
         query.setParameter("userId", userId);
-
         Float result = query.getSingleResult();
         logger.debug("Macro target for userId: {} and macroType: {} is: {}", userId, macroType, result);
-
         return result != null ? result : 0f;
     }
 
@@ -57,19 +54,16 @@ public class MacroDaoImplementation implements MacroDao {
 
     private float getAchievedMacro(int userId, String macroType, LocalDate startDate, LocalDate endDate) {
         logger.info("Calculating achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {}", userId, macroType, startDate, endDate);
-
         String field = getMacroField(macroType);
         String jpql = "SELECT SUM(m.food." + field + " * m.quantityValue) FROM MealPlanner m " +
                 "WHERE m.user.userId = :userId " +
                 "AND m.deleted = false " +  // Ensure soft delete is respected
                 "AND m.food.deleted = false " + // Ignore deleted foods
                 "AND m.createdAt BETWEEN :startDate AND :endDate";
-
         TypedQuery<Double> query = entityManager.createQuery(jpql, Double.class);
         query.setParameter("userId", userId);
         query.setParameter("startDate", startDate.atStartOfDay());
         query.setParameter("endDate", endDate.atTime(23, 59, 59));
-
         Double result = query.getSingleResult();
         float achievedMacro = (result != null) ? result.floatValue() : 0f;
 

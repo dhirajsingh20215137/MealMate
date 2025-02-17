@@ -17,5 +17,4 @@ public class FoodResponseDTO {
     private String foodType;
     private String imageUrl;
 
-
 }

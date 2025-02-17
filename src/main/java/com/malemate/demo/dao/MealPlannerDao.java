@@ -1,4 +1,4 @@
-package com.malemate.demo.Dao;
+package com.malemate.demo.dao;
 
 import com.malemate.demo.entity.MealPlanner;
 

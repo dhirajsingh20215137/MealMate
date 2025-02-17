@@ -1,12 +1,11 @@
 package com.malemate.demo.service;
 
-import com.malemate.demo.Dao.FoodDao;
-import com.malemate.demo.Dao.UserDao;
+import com.malemate.demo.dao.FoodDao;
+import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.FoodDTO;
 import com.malemate.demo.dto.FoodResponseDTO;
 import com.malemate.demo.entity.Food;
 import com.malemate.demo.entity.User;
-import com.malemate.demo.exceptions.*;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.ResourceNotFoundException;
 import com.malemate.demo.exceptions.UnauthorizedException;
@@ -22,10 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Log4j2
@@ -197,7 +193,6 @@ public class UserFoodService {
                     return new ResourceNotFoundException("Food item not found");
                 });
 
-        // Check permissions based on user type and food type
         if (user.getUserType() == User.UserType.USER) {
             if (food.getFoodType() != Food.FoodType.CUSTOM_FOOD || (food.getUser().getUserId()!=(userId))  ) {
                 log.warn("Unauthorized attempt to update foodId: {} by userId: {}", foodId, userId);
@@ -213,7 +208,6 @@ public class UserFoodService {
             throw new UnauthorizedException("Invalid user role.");
         }
 
-        // Update food details
         food.setFoodName(foodDTO.getFoodName());
         food.setCalories(foodDTO.getCalories());
         food.setProteins(foodDTO.getProteins());
@@ -232,27 +226,19 @@ public class UserFoodService {
 
     public void deleteUserFood(int foodId, String token, int userId) {
         log.info("Deleting food for userId: {}, foodId: {}", userId, foodId);
-
-        // Authenticate user
         User user = getAuthenticatedUser(userId, token);
         log.info("Authenticated user: {}", userId);
-
-        // Fetch the food item
         Food food = foodDao.findById(foodId)
                 .orElseThrow(() -> {
                     log.error("Food item not found for foodId: {}", foodId);
                     return new ResourceNotFoundException("Food item not found");
                 });
-
-        // Determine deletion rules based on user type
         if (user.getUserType() == User.UserType.ADMIN) {
-            // Admins can only delete universal foods
             if (food.getFoodType() != Food.FoodType.UNIVERSAL_FOOD) {
                 log.warn("Admin attempted to delete a non-universal food: foodId={}", foodId);
                 throw new UnauthorizedException("Admins can only delete universal foods");
             }
         } else if (user.getUserType() == User.UserType.USER) {
-            // Users can only delete their own custom foods
             if (food.getFoodType() != Food.FoodType.CUSTOM_FOOD || !food.getUser().equals(user)) {
                 log.warn("Unauthorized delete attempt by userId: {} for foodId: {}", userId, foodId);
                 throw new UnauthorizedException("You can only delete your own custom food items");
@@ -261,8 +247,6 @@ public class UserFoodService {
             log.warn("Unauthorized role attempting to delete food: {}", user.getUserType());
             throw new UnauthorizedException("Invalid user role");
         }
-
-        // Soft delete the food item
         food.setDeleted(true);
         foodDao.save(food);
         log.info("Food deleted successfully by userId: {} (foodId: {})", userId, foodId);

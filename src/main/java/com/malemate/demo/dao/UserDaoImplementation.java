@@ -1,4 +1,4 @@
-package com.malemate.demo.Dao;
+package com.malemate.demo.dao;
 
 import com.malemate.demo.entity.User;
 import jakarta.persistence.EntityManager;
@@ -15,7 +15,6 @@ public class UserDaoImplementation implements UserDao {
 
     @PersistenceContext
     private EntityManager entityManager;
-
     private static final Logger logger = LoggerFactory.getLogger(UserDaoImplementation.class);
 
     @Override
@@ -36,7 +35,6 @@ public class UserDaoImplementation implements UserDao {
         }
     }
 
-
     @Override
     public User saveUser(User user) {
         if (user.getUserId() == 0) {
@@ -49,21 +47,6 @@ public class UserDaoImplementation implements UserDao {
             logger.debug("User merged: {}", user.getEmail());
         }
         return user;
-    }
-
-    @Override
-    public void deleteUser(int id) {
-        logger.info("Attempting soft delete for user with ID: {}", id);
-        Optional<User> optionalUser = getUserById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            user.setDeleted(true);
-            entityManager.merge(user);
-            logger.info("User soft deleted with ID: {}", id);
-        } else {
-            logger.warn("User not found with ID: {}", id);
-            throw new RuntimeException("User not found");
-        }
     }
 
     @Override

@@ -31,7 +31,6 @@ public class MealPlannerController {
             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         log.info("Adding food to meal plan for user: {}", userId);
-
         MealPlannerResponseDTO response = mealPlannerService.addFoodToMealPlan(userId, mealPlannerRequestDTO, token);
         log.info("Food added to meal plan for user: {} with food ID: {}", userId, mealPlannerRequestDTO.getFoodId());
         return response;
@@ -44,7 +43,6 @@ public class MealPlannerController {
             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         log.info("Removing food with ID: {} from meal plan for user: {}", mealPlannerId, userId);
-
         String response = mealPlannerService.removeFoodFromMealPlan(userId, mealPlannerId, token);
         log.info("Food with ID: {} removed from meal plan for user: {}", mealPlannerId, userId);
         return response;
@@ -53,7 +51,6 @@ public class MealPlannerController {
     @GetMapping
     public List<MealPlannerResponseDTO> getUserMealPlan(@PathVariable int userId) {
         log.info("Fetching meal plan for user: {}", userId);
-
         List<MealPlannerResponseDTO> mealPlan = mealPlannerService.getUserMealPlan(userId);
         log.info("Fetched meal plan for user: {} with {} entries", userId, mealPlan.size());
         return mealPlan;

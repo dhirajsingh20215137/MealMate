@@ -22,7 +22,6 @@ public class MacroController {
                                        @RequestHeader("Authorization") String authorizationToken) {
         String token = authorizationToken.startsWith("Bearer ") ? authorizationToken.substring(7) : authorizationToken;
         log.info("Fetching carbs stats for user: {} on date: {}", userId, date != null ? date : "latest");
-
         MacroStatsDTO response = macroService.getMacrosStats(userId, "carbs", date, token);
         log.info("Carbs stats fetched for user: {}", userId);
         return response;
@@ -34,7 +33,6 @@ public class MacroController {
                                          @RequestHeader("Authorization") String authorizationToken) {
         String token = authorizationToken.startsWith("Bearer ") ? authorizationToken.substring(7) : authorizationToken;
         log.info("Fetching protein stats for user: {} on date: {}", userId, date != null ? date : "latest");
-
         MacroStatsDTO response = macroService.getMacrosStats(userId, "proteins", date, token);
         log.info("Protein stats fetched for user: {}", userId);
         return response;
@@ -46,7 +44,6 @@ public class MacroController {
                                           @RequestHeader("Authorization") String authorizationToken) {
         String token = authorizationToken.startsWith("Bearer ") ? authorizationToken.substring(7) : authorizationToken;
         log.info("Fetching calories stats for user: {} on date: {}", userId, date != null ? date : "latest");
-
         MacroStatsDTO response = macroService.getMacrosStats(userId, "calories", date, token);
         log.info("Calories stats fetched for user: {}", userId);
         return response;

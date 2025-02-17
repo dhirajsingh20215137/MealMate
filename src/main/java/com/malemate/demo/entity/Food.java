@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "food")
-public class Food extends base {
+public class Food extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "food_id")
@@ -13,7 +13,7 @@ public class Food extends base {
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-    @Column(name = "food_name", nullable = false)
+    @Column(name = "food_name", nullable = false) // check
     private String foodName;
 
     @Column(name = "calories", nullable = false)

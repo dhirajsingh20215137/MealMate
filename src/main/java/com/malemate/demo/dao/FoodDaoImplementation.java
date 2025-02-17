@@ -1,4 +1,4 @@
-package com.malemate.demo.Dao;
+package com.malemate.demo.dao;
 
 import com.malemate.demo.entity.Food;
 import jakarta.persistence.EntityManager;
@@ -22,12 +22,10 @@ public class FoodDaoImplementation implements FoodDao {
     public Optional<Food> findById(int id) {
         log.info("Finding food item by id: {}", id);
         Food food = entityManager.find(Food.class, id);
-
         if (food == null || food.isDeleted()) {
             log.warn("Food item with id: {} not found or is deleted", id);
             return Optional.empty();
         }
-
         log.info("Food item found: {}", food.getFoodName());
         return Optional.of(food);
     }
@@ -44,20 +42,6 @@ public class FoodDaoImplementation implements FoodDao {
 
         log.info("Food item saved with id: {}", food.getFoodId());
         return food;
-    }
-
-    @Override
-    public void delete(Food food) {
-        log.info("Marking food item as deleted: {}", food.getFoodName());
-        Optional<Food> existingFood = findById(food.getFoodId());
-
-        if (existingFood.isPresent()) {
-            existingFood.get().setDeleted(true);
-            entityManager.merge(existingFood.get());
-            log.info("Food item soft deleted: {}", food.getFoodName());
-        } else {
-            log.warn("Food item with id: {} not found for deletion", food.getFoodId());
-        }
     }
 
     @Override
@@ -89,17 +73,5 @@ public class FoodDaoImplementation implements FoodDao {
         return foodItems;
     }
 
-    @Override
-    public Food update(Food food) {
-        log.info("Updating food item with id: {}", food.getFoodId());
 
-        if (findById(food.getFoodId()).isPresent()) {
-            Food updatedFood = entityManager.merge(food);
-            log.info("Food item updated: {}", updatedFood.getFoodName());
-            return updatedFood;
-        } else {
-            log.error("Food item with id: {} not found for update", food.getFoodId());
-            throw new RuntimeException("Food item not found for update");
-        }
-    }
 }

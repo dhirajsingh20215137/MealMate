@@ -1,7 +1,7 @@
 package com.malemate.demo.service;
 
-import com.malemate.demo.Dao.MacroDao;
-import com.malemate.demo.Dao.UserDao;
+import com.malemate.demo.dao.MacroDao;
+import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.MacroStatsDTO;
 import com.malemate.demo.entity.User;
 import com.malemate.demo.util.JwtUtil;
@@ -33,7 +33,6 @@ public class MacroService {
         log.info("Fetching macro stats for userId: {}, macroType: {}, date: {}", userId, macroType, date);
 
         validateInput(macroType, date, token);
-
         String email = jwtUtil.extractEmail(token);
         User user = userDao.getUserByEmail(email)
                 .orElseThrow(() -> {
@@ -45,9 +44,7 @@ public class MacroService {
             log.warn("Unauthorized access attempt by userId: {}", user.getUserId());
             throw new UnauthorizedException("Unauthorized action");
         }
-
         LocalDate targetDate = parseDate(date);
-
         float dailyTarget = macroDao.getUserMacroTarget(userId, macroType);
         float dailyAchieved = macroDao.getDailyAchievedMacro(userId, macroType, targetDate);
         float weeklyTarget = dailyTarget * 7;

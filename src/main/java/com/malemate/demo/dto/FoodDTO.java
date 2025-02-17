@@ -1,6 +1,5 @@
 package com.malemate.demo.dto;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +14,5 @@ public class FoodDTO {
     private String foodType;
    private String imageUrl;
 
-    public FoodDTO() {
-    }
 
 }

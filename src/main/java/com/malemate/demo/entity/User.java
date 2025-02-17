@@ -1,12 +1,11 @@
 package com.malemate.demo.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.usertype.UserType;
 
 
 @Entity
 @Table(name = "user")
-public class User extends base {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

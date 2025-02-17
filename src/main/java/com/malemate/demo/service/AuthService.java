@@ -1,6 +1,6 @@
 package com.malemate.demo.service;
 
-import com.malemate.demo.Dao.UserDao;
+import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.AuthResponseDTO;
 import com.malemate.demo.dto.LoginRequestDTO;
 import com.malemate.demo.dto.SignupRequestDTO;
@@ -32,22 +32,16 @@ public class AuthService {
 
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDto) {
         log.info("Signup request received for email: {}", signupRequestDto.getEmail());
-
         validateSignup(signupRequestDto);
-
         log.info("Signup successful for email: {}", signupRequestDto.getEmail());
-
         Optional<User> existingUser = userDao.getUserByEmail(signupRequestDto.getEmail());
         if (existingUser.isPresent()) {
             log.error("Email already exists: {}", signupRequestDto.getEmail());
             throw new BadRequestException("Email already exists");
         }
-
         User user = new User();
         user.setEmail(signupRequestDto.getEmail());
         user.setPassword(BCrypt.hashpw(signupRequestDto.getPassword(), BCrypt.gensalt()));
-
-
         if (Objects.nonNull(signupRequestDto.getGender())) {
             user.setGender(signupRequestDto.getGender());
         }
@@ -67,37 +61,26 @@ public class AuthService {
             user.setTargetedCalories(signupRequestDto.getTargetedCalories());
         }
 
-
         userDao.saveUser(user);
         log.info("User successfully created with email: {}", signupRequestDto.getEmail());
-
         String token = jwtUtil.generateToken(user);
         log.info("Token generated for user with email: {}", signupRequestDto.getEmail());
-
         return new AuthResponseDTO(token, user);
     }
 
 
     public AuthResponseDTO login(LoginRequestDTO loginRequestDto) {
         log.info("Login attempt for email: {}", loginRequestDto.getEmail());
-
         validateLogin(loginRequestDto);
-
-
         Optional<User> userOptional = userDao.getUserByEmail(loginRequestDto.getEmail());
         if (userOptional.isEmpty() || !BCrypt.checkpw(loginRequestDto.getPassword(), userOptional.get().getPassword())) {
             log.error("Login failed: Invalid credentials for email: {}", loginRequestDto.getEmail());
             throw new UnauthorizedException("Invalid email or password");
         }
-
         User user = userOptional.get();
         log.info("User authenticated successfully for email: {}", user.getEmail());
-
-
         String token = jwtUtil.generateToken(user);
         log.info("Token generated for user with email: {}", user.getEmail());
-
-
         return new AuthResponseDTO(token, user);
     }
 
