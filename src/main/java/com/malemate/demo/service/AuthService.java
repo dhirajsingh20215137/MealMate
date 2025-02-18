@@ -7,6 +7,7 @@ import com.malemate.demo.dto.SignupRequestDTO;
 import com.malemate.demo.entity.User;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.UnauthorizedException;
+import com.malemate.demo.service.impl.AuthServiceInterface;
 import com.malemate.demo.util.JwtUtil;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -19,17 +20,17 @@ import java.util.Optional;
 
 @Service
 @Log4j2
-public class AuthService {
+public class AuthService implements AuthServiceInterface {
 
     private final UserDao userDao;
     private final JwtUtil jwtUtil;
 
-    @Autowired
     public AuthService(UserDao userDao, JwtUtil jwtUtil) {
         this.userDao = userDao;
         this.jwtUtil = jwtUtil;
     }
 
+    @Override
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDto) {
         log.info("Signup request received for email: {}", signupRequestDto.getEmail());
         validateSignup(signupRequestDto);
@@ -45,21 +46,11 @@ public class AuthService {
         if (Objects.nonNull(signupRequestDto.getGender())) {
             user.setGender(signupRequestDto.getGender());
         }
-        if (Objects.nonNull(signupRequestDto.getWeight())) {
-            user.setWeight(signupRequestDto.getWeight());
-        }
-        if (Objects.nonNull(signupRequestDto.getHeight())) {
-            user.setHeight(signupRequestDto.getHeight());
-        }
-        if (Objects.nonNull(signupRequestDto.getTargetedCarbs())) {
-            user.setTargetedCarbs(signupRequestDto.getTargetedCarbs());
-        }
-        if (Objects.nonNull(signupRequestDto.getTargetedProtein())) {
-            user.setTargetedProtein(signupRequestDto.getTargetedProtein());
-        }
-        if (Objects.nonNull(signupRequestDto.getTargetedCalories())) {
-            user.setTargetedCalories(signupRequestDto.getTargetedCalories());
-        }
+        user.setWeight(signupRequestDto.getWeight());
+        user.setHeight(signupRequestDto.getHeight());
+        user.setTargetedCarbs(signupRequestDto.getTargetedCarbs());
+        user.setTargetedProtein(signupRequestDto.getTargetedProtein());
+        user.setTargetedFats(signupRequestDto.getTargetedFats());
 
         userDao.saveUser(user);
         log.info("User successfully created with email: {}", signupRequestDto.getEmail());
@@ -68,7 +59,7 @@ public class AuthService {
         return new AuthResponseDTO(token, user);
     }
 
-
+ @Override
     public AuthResponseDTO login(LoginRequestDTO loginRequestDto) {
         log.info("Login attempt for email: {}", loginRequestDto.getEmail());
         validateLogin(loginRequestDto);

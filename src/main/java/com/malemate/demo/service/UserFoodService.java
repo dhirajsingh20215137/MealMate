@@ -9,6 +9,7 @@ import com.malemate.demo.entity.User;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.ResourceNotFoundException;
 import com.malemate.demo.exceptions.UnauthorizedException;
+import com.malemate.demo.service.impl.UserFoodServiceInterface;
 import com.malemate.demo.util.JwtUtil;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
 
 @Log4j2
 @Service
-public class UserFoodService {
+public class UserFoodService implements UserFoodServiceInterface {
 
     private final FoodDao foodDao;
     private final UserDao userDao;
@@ -43,14 +44,11 @@ public class UserFoodService {
     public FoodResponseDTO addUserFood(FoodDTO foodDTO, String token, int userId, MultipartFile file) {
         log.info("Adding food to collection for userId: {}", userId);
 
-        // Validate user and food request
         validateUserFoodRequest(foodDTO, token, userId);
 
-        // Authenticate user
         User user = getAuthenticatedUser(userId, token);
         log.info("Authenticated user: {}", userId);
 
-        // Determine food type based on user role
         Food.FoodType foodType;
         if (user.getUserType() == User.UserType.ADMIN) {
             foodType = Food.FoodType.UNIVERSAL_FOOD;
@@ -60,28 +58,23 @@ public class UserFoodService {
             log.warn("Unauthorized role attempting to add food: {}", user.getUserType());
             throw new UnauthorizedException("Invalid user role.");
         }
-
-        // Create Food entity
         Food food = new Food();
         food.setFoodName(foodDTO.getFoodName());
-        food.setCalories(foodDTO.getCalories());
+        food.setFats(foodDTO.getFats());
         food.setProteins(foodDTO.getProteins());
         food.setCarbs(foodDTO.getCarbs());
-        food.setFoodType(foodType); // Enforce food type based on user role
+        food.setFoodType(foodType);
         food.setQuantityUnit(Food.QuantityUnit.valueOf(foodDTO.getQuantityUnit()));
 
-        // Only assign user if it's a CUSTOM_FOOD
         if (foodType == Food.FoodType.CUSTOM_FOOD) {
             food.setUser(user);
         } else {
-            food.setUser(null); // Universal foods should have no associated user
+            food.setUser(null);
         }
 
-        // Handle photo upload if a file is provided
+
         if (file != null && !file.isEmpty()) {
             log.info("Uploading photo for food: {}", foodDTO.getFoodName());
-
-            // Ensure the upload directory exists
             Path uploadPath = Paths.get(UPLOAD_DIR);
             if (!Files.exists(uploadPath)) {
                 try {
@@ -93,19 +86,16 @@ public class UserFoodService {
                 }
             }
 
-            // Generate a unique filename
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null || originalFilename.isEmpty()) {
                 log.error("Uploaded file has no name");
                 throw new IllegalArgumentException("Invalid file name");
             }
 
-            // Extract file extension and generate a unique name
             String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
             String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
 
-            // Define file path
             Path filePath = uploadPath.resolve(uniqueFilename);
             log.info("Saving file to: {}", filePath.toString());
 
@@ -117,15 +107,12 @@ public class UserFoodService {
                 throw new RuntimeException("Error saving file", e);
             }
 
-            // Set the image URL (filename) in the food object
             food.setImageUrl(uniqueFilename);
         } else {
-            // If no file is provided, use the filename from the foodDTO
             food.setImageUrl(foodDTO.getImageUrl());
             log.info("No image file uploaded. Using provided image URL: {}", foodDTO.getImageUrl());
         }
 
-        // Save the food object in the database
         foodDao.save(food);
         log.info("Food added successfully for userId: {} as {}", userId, foodType);
 
@@ -136,44 +123,38 @@ public class UserFoodService {
     public Food uploadFoodImage(MultipartFile file, int userId) throws IOException {
         log.info("Uploading food image for userId: {}", userId);
 
-        // Fetch user (Ensure user exists and is not deleted)
         User user = userDao.getUserById(userId)
                 .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found or marked as deleted"));
 
-        // Create the upload directory if it doesn't exist
         Path uploadPath = Paths.get(UPLOAD_DIR);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Get the original file name and create a unique name
         String originalFilename = file.getOriginalFilename();
         String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
         String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
         String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
 
-        // Define the path where the file will be saved
         Path filePath = uploadPath.resolve(uniqueFilename);
 
         try {
-            // Copy the file to the destination
+
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.error("Failed to upload file: {}", e.getMessage(), e);
             throw new IOException("Failed to upload file: " + e.getMessage(), e);
         }
 
-        // Create the food object and set the image URL
         Food food = new Food();
-        food.setUser(user); // Associate the food with the user
-        food.setImageUrl(uniqueFilename); // Save only the filename (e.g., abc123_image.jpg)
+        food.setUser(user);
+        food.setImageUrl(uniqueFilename);
 
-        // Save the food object to the database
         foodDao.save(food);
 
         log.info("Food image uploaded successfully for userId: {}", userId);
-        return food; // Return the food object with the image URL
+        return food;
     }
 
 
@@ -209,7 +190,7 @@ public class UserFoodService {
         }
 
         food.setFoodName(foodDTO.getFoodName());
-        food.setCalories(foodDTO.getCalories());
+        food.setFats(foodDTO.getFats());
         food.setProteins(foodDTO.getProteins());
         food.setCarbs(foodDTO.getCarbs());
         food.setFoodType(Food.FoodType.valueOf(foodDTO.getFoodType()));
@@ -262,7 +243,6 @@ public class UserFoodService {
                         foodDao.getFoodItemsByType(Food.FoodType.UNIVERSAL_FOOD).stream(),
                         foodDao.getFoodItemsByUserId(user.getUserId()).stream()
                 )
-//                .filter(food -> !food.isDeleted())
                 .toList();
 
         return allFoods.stream().map(this::mapToFoodResponseDTO).toList();
@@ -272,7 +252,7 @@ public class UserFoodService {
         return FoodResponseDTO.builder()
                 .foodId(food.getFoodId())
                 .foodName(food.getFoodName())
-                .calories(food.getCalories())
+                .fats(food.getFats())
                 .proteins(food.getProteins())
                 .carbs(food.getCarbs())
                 .quantityUnit(food.getQuantityUnit().name())
@@ -317,9 +297,9 @@ public class UserFoodService {
             log.error("Food name is missing");
             throw new BadRequestException("Food name is required");
         }
-        if (foodDTO.getCalories() <= 0) {
-            log.error("Invalid calories value: {}", foodDTO.getCalories());
-            throw new BadRequestException("Calories must be greater than zero");
+        if (foodDTO.getFats() <= 0) {
+            log.error("Invalid fats value: {}", foodDTO.getFats());
+            throw new BadRequestException("Fats must be greater than zero");
         }
         if (foodDTO.getProteins() <= 0) {
             log.error("Invalid proteins value: {}", foodDTO.getProteins());

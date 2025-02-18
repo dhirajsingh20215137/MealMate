@@ -1,5 +1,6 @@
 package com.malemate.demo.controller;
 
+import com.malemate.demo.dto.FoodResponseDTO;
 import com.malemate.demo.dto.MealPlannerRequestDTO;
 import com.malemate.demo.dto.MealPlannerResponseDTO;
 import com.malemate.demo.service.MealPlannerService;
@@ -48,11 +49,13 @@ public class MealPlannerController {
         return response;
     }
 
-    @GetMapping
+
+    @GetMapping("/foods")
     public List<MealPlannerResponseDTO> getUserMealPlan(@PathVariable int userId) {
-        log.info("Fetching meal plan for user: {}", userId);
+        log.info("Fetching meal plan with food details for user: {}", userId);
         List<MealPlannerResponseDTO> mealPlan = mealPlannerService.getUserMealPlan(userId);
         log.info("Fetched meal plan for user: {} with {} entries", userId, mealPlan.size());
         return mealPlan;
     }
+
 }

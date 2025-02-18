@@ -4,6 +4,7 @@ import com.malemate.demo.dao.MacroDao;
 import com.malemate.demo.dao.UserDao;
 import com.malemate.demo.dto.MacroStatsDTO;
 import com.malemate.demo.entity.User;
+import com.malemate.demo.service.impl.MacroServiceInterface;
 import com.malemate.demo.util.JwtUtil;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.UnauthorizedException;
@@ -17,7 +18,7 @@ import java.time.format.DateTimeParseException;
 
 @Slf4j
 @Service
-public class MacroService {
+public class MacroService implements MacroServiceInterface {
 
     private final MacroDao macroDao;
     private final JwtUtil jwtUtil;
@@ -29,10 +30,10 @@ public class MacroService {
         this.userDao = userDao;
     }
 
-    public MacroStatsDTO getMacrosStats(int userId, String macroType, String date, String token) {
-        log.info("Fetching macro stats for userId: {}, macroType: {}, date: {}", userId, macroType, date);
+    public MacroStatsDTO getMacrosStats(int userId, String macroType,  String token) {
+        log.info("Fetching macro stats for userId: {}, macroType: {}", userId, macroType);
 
-        validateInput(macroType, date, token);
+        validateInput(macroType, token);
         String email = jwtUtil.extractEmail(token);
         User user = userDao.getUserByEmail(email)
                 .orElseThrow(() -> {
@@ -44,7 +45,7 @@ public class MacroService {
             log.warn("Unauthorized access attempt by userId: {}", user.getUserId());
             throw new UnauthorizedException("Unauthorized action");
         }
-        LocalDate targetDate = parseDate(date);
+        LocalDate targetDate = LocalDate.now();
         float dailyTarget = macroDao.getUserMacroTarget(userId, macroType);
         float dailyAchieved = macroDao.getDailyAchievedMacro(userId, macroType, targetDate);
         float weeklyTarget = dailyTarget * 7;
@@ -57,7 +58,7 @@ public class MacroService {
         return new MacroStatsDTO(dailyTarget, dailyAchieved, weeklyTarget, weeklyAchieved, monthlyTarget, monthlyAchieved);
     }
 
-    private void validateInput(String macroType, String date, String token) {
+    private void validateInput(String macroType,  String token) {
         if (StringUtils.isBlank(token)) {
             log.error("Token is missing");
             throw new BadRequestException("Authentication token is required");
@@ -68,12 +69,4 @@ public class MacroService {
         }
     }
 
-    private LocalDate parseDate(String date) {
-        try {
-            return (StringUtils.isBlank(date)) ? LocalDate.now() : LocalDate.parse(date);
-        } catch (DateTimeParseException e) {
-            log.error("Invalid date format: {}", date);
-            throw new BadRequestException("Invalid date format. Use YYYY-MM-DD.");
-        }
-    }
 }

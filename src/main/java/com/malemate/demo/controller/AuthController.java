@@ -4,12 +4,12 @@ import com.malemate.demo.dto.AuthResponseDTO;
 import com.malemate.demo.dto.LoginRequestDTO;
 import com.malemate.demo.dto.SignupRequestDTO;
 import com.malemate.demo.service.AuthService;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
+@Log4j2
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

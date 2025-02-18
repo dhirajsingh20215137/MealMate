@@ -16,7 +16,7 @@ public class UserProfileDTO {
     private float height;
     private float targetedCarbs;
     private float targetedProtein;
-    private float targetedCalories;
+    private float targetedFats;
     private String UserUrl;
     private String currentPassword;
     private String newPassword;

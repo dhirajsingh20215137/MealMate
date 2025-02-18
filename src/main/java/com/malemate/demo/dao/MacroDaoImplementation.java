@@ -54,11 +54,10 @@ public class MacroDaoImplementation implements MacroDao {
 
     private float getAchievedMacro(int userId, String macroType, LocalDate startDate, LocalDate endDate) {
         logger.info("Calculating achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {}", userId, macroType, startDate, endDate);
-        String field = getMacroField(macroType);
+        String field = macroType;
         String jpql = "SELECT SUM(m.food." + field + " * m.quantityValue) FROM MealPlanner m " +
                 "WHERE m.user.userId = :userId " +
-                "AND m.deleted = false " +  // Ensure soft delete is respected
-                "AND m.food.deleted = false " + // Ignore deleted foods
+                "AND m.deleted = false " +
                 "AND m.createdAt BETWEEN :startDate AND :endDate";
         TypedQuery<Double> query = entityManager.createQuery(jpql, Double.class);
         query.setParameter("userId", userId);
@@ -67,7 +66,7 @@ public class MacroDaoImplementation implements MacroDao {
         Double result = query.getSingleResult();
         float achievedMacro = (result != null) ? result.floatValue() : 0f;
 
-        logger.debug("Achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {} is: {}",
+        logger.info("Achieved macro for userId: {}, macroType: {}, startDate: {}, endDate: {} is: {}",
                 userId, macroType, startDate, endDate, achievedMacro);
 
         return achievedMacro;
@@ -77,17 +76,9 @@ public class MacroDaoImplementation implements MacroDao {
         switch (macroType) {
             case "carbs": return "targetedCarbs";
             case "proteins": return "targetedProtein";
-            case "calories": return "targetedCalories";
+            case "fats": return "targetedFats";
             default: throw new IllegalArgumentException("Invalid macro type: " + macroType);
         }
     }
 
-    private String getMacroField(String macroType) {
-        switch (macroType) {
-            case "carbs": return "carbs";
-            case "proteins": return "proteins";
-            case "calories": return "calories";
-            default: throw new IllegalArgumentException("Invalid macro type: " + macroType);
-        }
-    }
 }

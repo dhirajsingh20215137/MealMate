@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class FoodDTO {
     private String foodName;
-    private float calories;
+    private float fats;
     private float proteins;
     private float carbs;
     private String quantityUnit;

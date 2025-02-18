@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class MealPlannerRequestDTO {
     private int foodId;
-    private String mealType; //check
+    private String mealType;
     private float quantityValue;
 }

@@ -8,6 +8,7 @@ import com.malemate.demo.dto.MealPlannerResponseDTO;
 import com.malemate.demo.entity.Food;
 import com.malemate.demo.entity.MealPlanner;
 import com.malemate.demo.entity.User;
+import com.malemate.demo.service.impl.MealPlannerServiceInterface;
 import com.malemate.demo.util.JwtUtil;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.UnauthorizedException;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Log4j2
 @Service
-public class MealPlannerService {
+public class MealPlannerService implements MealPlannerServiceInterface {
 
     private final MealPlannerDao mealPlannerDao;
     private final FoodDao foodDao;
@@ -71,24 +72,42 @@ public class MealPlannerService {
         return "Food removed from meal plan";
     }
 
+
+
     public List<MealPlannerResponseDTO> getUserMealPlan(int userId) {
         log.info("Fetching meal plan for userId: {}", userId);
         List<MealPlanner> mealPlans = mealPlannerDao.findByUserId(userId);
+
         return mealPlans.stream()
                 .map(this::mapToMealPlannerResponseDTO)
                 .collect(Collectors.toList());
     }
 
     private MealPlannerResponseDTO mapToMealPlannerResponseDTO(MealPlanner mealPlanner) {
-        return new MealPlannerResponseDTO(
-                mealPlanner.getMealPlannerId(),
-                mealPlanner.getUser().getUserId(),
-                mealPlanner.getFood().getFoodId(),
-                mealPlanner.getFood().getFoodName(),
-                mealPlanner.getMealType().name(),
-                mealPlanner.getQuantityValue()
-        );
+        Food food = mealPlanner.getFood();
+
+        return MealPlannerResponseDTO.builder()
+                .mealPlannerId(mealPlanner.getMealPlannerId())
+                .userId(mealPlanner.getUser().getUserId())
+                .foodId(food.getFoodId())
+                .foodName(food.getFoodName())
+                .mealType(mealPlanner.getMealType().name())
+                .quantityValue(mealPlanner.getQuantityValue())
+                .fats(food.getFats())
+                .proteins(food.getProteins())
+                .carbs(food.getCarbs())
+                .quantityUnit(food.getQuantityUnit().name())
+                .foodType(food.getFoodType().name())
+                .imageUrl(food.getImageUrl())
+                .build();
     }
+
+
+
+
+
+
+
 
     private User getAuthenticatedUser(int userId, String token) {
         String email = jwtUtil.extractEmail(token);

@@ -11,5 +11,3 @@ public class BadRequestException extends RuntimeException {
         super(message);
     }
 }
-
-// check //tree diagram

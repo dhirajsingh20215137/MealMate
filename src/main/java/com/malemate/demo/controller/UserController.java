@@ -2,15 +2,19 @@ package com.malemate.demo.controller;
 
 import com.malemate.demo.dto.ChangePasswordDTO;
 import com.malemate.demo.dto.UserProfileDTO;
+import com.malemate.demo.entity.User;
 import com.malemate.demo.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/user")
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
     private final UserService userService;
@@ -50,4 +54,34 @@ public class UserController {
         log.info("Password changed successfully for user: {}", userId);
         return ResponseEntity.ok("Password changed successfully.");
     }
+
+
+
+
+    @PostMapping("/{userId}/photo/upload-photo")  //check
+    public ResponseEntity<?> uploadProfilePhoto(
+            @PathVariable int userId,
+            @RequestParam("profilePhoto") MultipartFile file) {
+
+        log.info("Received photo upload request for userId: {}", userId);
+
+        try {
+            if (file.isEmpty()) {
+                log.error("Uploaded file is empty.");
+                return ResponseEntity.badRequest().body("No file uploaded.");
+            }
+
+            User user = userService.uploadProfileImage(file, userId);
+            return ResponseEntity.ok(user);
+        } catch (IOException e) {
+            log.error("IOException while uploading file: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error uploading photo.");
+        } catch (Exception ex) {
+            log.error("Unexpected error: {}", ex.getMessage(), ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error occurred.");
+        }
+    }
+
 }

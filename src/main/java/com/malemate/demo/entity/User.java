@@ -34,8 +34,8 @@ public class User extends BaseEntity {
     @Column(name = "targeted_protein")
     private float targetedProtein;
 
-    @Column(name = "targeted_calories")
-    private float targetedCalories;
+    @Column(name = "targeted_fats")
+    private float targetedFats;
 
     @Enumerated(EnumType.STRING)
     @Column(name="user_type")
@@ -111,12 +111,12 @@ public class User extends BaseEntity {
         this.targetedProtein = targetedProtein;
     }
 
-    public float getTargetedCalories() {
-        return targetedCalories;
+    public float getTargetedFats() {
+        return targetedFats;
     }
 
-    public void setTargetedCalories(float targetedCalories) {
-        this.targetedCalories = targetedCalories;
+    public void setTargetedFats(float targetedFats) {
+        this.targetedFats = targetedFats;
     }
 
     public UserType getUserType() {

@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,16 +52,26 @@ public class MealPlannerImplementation implements MealPlannerDao {
     @Override
     public List<MealPlanner> findByUserId(int userId) {
         logger.info("Finding daily meal planners for userId: {}", userId);
+
         LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
         List<MealPlanner> mealPlanners = entityManager.createQuery(
-                        "SELECT m FROM MealPlanner m WHERE m.user.userId = :userId " +
-                                "AND m.deleted = false AND DATE(m.createdAt) = :today", MealPlanner.class)
+                        "SELECT m FROM MealPlanner m " +
+                                "JOIN FETCH m.food f " +
+                                "WHERE m.user.userId = :userId " +
+                                "AND m.deleted = false " +
+                                "AND m.createdAt BETWEEN :startOfDay AND :endOfDay", MealPlanner.class)
                 .setParameter("userId", userId)
-                .setParameter("today", today)
+                .setParameter("startOfDay", startOfDay)
+                .setParameter("endOfDay", endOfDay)
                 .getResultList();
-        logger.debug("Found {} meal planners for userId: {} on {}", mealPlanners.size(), userId, today);
+
+        logger.info("Found {} meal planners for userId: {} on {}", mealPlanners.size(), userId, today);
         return mealPlanners;
     }
+
 
     public Optional<MealPlanner> findByUserIdAndmealPlannerId(int userId, int mealPlannerId) {
         logger.info("Finding meal planner for userId: {}, foodId: {}", userId, mealPlannerId);

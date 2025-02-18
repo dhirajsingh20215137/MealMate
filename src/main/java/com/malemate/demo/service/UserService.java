@@ -7,6 +7,7 @@ import com.malemate.demo.entity.User;
 import com.malemate.demo.exceptions.BadRequestException;
 import com.malemate.demo.exceptions.ResourceNotFoundException;
 import com.malemate.demo.exceptions.UnauthorizedException;
+import com.malemate.demo.service.impl.UserServiceInterface;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.mindrot.jbcrypt.BCrypt;
@@ -19,7 +20,7 @@ import java.nio.file.*;
 
 @Log4j2
 @Service
-public class UserService {
+public class UserService implements UserServiceInterface {
 
     private final UserDao userDao;
 
@@ -83,8 +84,8 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         if (userProfileDTO.getTargetedProtein() > 0) {
             user.setTargetedProtein(userProfileDTO.getTargetedProtein());
         }
-        if (userProfileDTO.getTargetedCalories() > 0) {
-            user.setTargetedCalories(userProfileDTO.getTargetedCalories());
+        if (userProfileDTO.getTargetedFats() > 0) {
+            user.setTargetedFats(userProfileDTO.getTargetedFats());
         }
         if (userProfileDTO.getGender() != null) {
             user.setGender(userProfileDTO.getGender());
@@ -113,12 +114,9 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
             Files.createDirectories(uploadPath);
         }
 
-
         String originalFilename = file.getOriginalFilename();
         String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String baseName = originalFilename.substring(0, originalFilename.lastIndexOf("."));
-        String uniqueFilename = baseName + "_" + System.currentTimeMillis() + fileExtension;
-
+        String uniqueFilename =   userId + "." + fileExtension;
         Path filePath = uploadPath.resolve(uniqueFilename);
 
         try {
@@ -173,7 +171,7 @@ private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uplo
         userProfileDto.setHeight(user.getHeight());
         userProfileDto.setTargetedCarbs(user.getTargetedCarbs());
         userProfileDto.setTargetedProtein(user.getTargetedProtein());
-        userProfileDto.setTargetedCalories(user.getTargetedCalories());
+        userProfileDto.setTargetedFats(user.getTargetedFats());
         userProfileDto.setUserUrl(user.getUserUrl());
         return userProfileDto;
     }

@@ -15,6 +15,6 @@ public class SignupRequestDTO {
     private float height;
     private float targetedCarbs;
     private float targetedProtein;
-    private float targetedCalories;
+    private float targetedFats;
 
 }

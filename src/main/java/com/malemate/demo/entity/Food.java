@@ -13,11 +13,11 @@ public class Food extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-    @Column(name = "food_name", nullable = false) // check
+    @Column(name = "food_name", nullable = false)
     private String foodName;
 
-    @Column(name = "calories", nullable = false)
-    private float calories;
+    @Column(name = "fats", nullable = false)
+    private float fats;
 
     @Column(name = "proteins", nullable = false)
     private float proteins;
@@ -60,12 +60,12 @@ public class Food extends BaseEntity {
         this.foodName = foodName;
     }
 
-    public float getCalories() {
-        return calories;
+    public float getFats() {
+        return fats;
     }
 
-    public void setCalories(float calories) {
-        this.calories = calories;
+    public void setFats(float fats) {
+        this.fats = fats;
     }
 
     public float getProteins() {

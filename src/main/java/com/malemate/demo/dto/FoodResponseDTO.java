@@ -10,7 +10,7 @@ import lombok.Setter;
 public class FoodResponseDTO {
     private int foodId;
     private String foodName;
-    private float calories;
+    private float fats;
     private float proteins;
     private float carbs;
     private String quantityUnit;
