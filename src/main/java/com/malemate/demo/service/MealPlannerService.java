@@ -30,7 +30,7 @@ public class MealPlannerService implements MealPlannerServiceInterface {
     private final UserDao userDao;
     private final JwtUtil jwtUtil;
 
-    @Autowired
+
     public MealPlannerService(MealPlannerDao mealPlannerDao, FoodDao foodDao, UserDao userDao, JwtUtil jwtUtil) {
         this.mealPlannerDao = mealPlannerDao;
         this.foodDao = foodDao;

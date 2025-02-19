@@ -23,8 +23,7 @@ import java.nio.file.*;
 public class UserService implements UserServiceInterface {
 
     private final UserDao userDao;
-
-private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
 
 

@@ -20,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/user/{userId}/foods")
-@CrossOrigin(origins = "http://localhost:5173")
 @Slf4j
 public class MealLibraryController {
 
