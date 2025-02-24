@@ -1,0 +1,24 @@
+package com.malemate.demo.dto;
+
+import com.malemate.demo.entity.User;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+
+@Getter
+@Setter
+public class UserProfileDTO {
+
+    private int userId;
+    private User.Gender gender;
+    private float weight;
+    private float height;
+    private float targetedCarbs;
+    private float targetedProtein;
+    private float targetedFats;
+    private String UserUrl;
+    private String currentPassword;
+    private String newPassword;
+
+}
